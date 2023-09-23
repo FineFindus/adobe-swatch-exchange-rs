@@ -1,46 +1,30 @@
-const FILE_SIGNATURE: &[u8; 4] = b"ASEF";
-const VERSION: u32 = 0x00010000;
+pub use types::{ColorBlock, ColorType, ColorValue, Group};
 
-#[derive(Debug, Clone)]
-enum BlockType {
-    GroupStart,
-    GroupEnd,
-    ColorEntry,
-}
+mod buffer;
+mod types;
 
-#[derive(Debug, Clone)]
-enum ColorType {
-    Global,
-    Spot,
-    Normal,
-}
+/// Creates an Adobe Swatch Exchange (ASE) file.
+///
+///
+///
+/// # Examples
+/// ```rust
+///
+/// ```
+pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
+    let mut buf = buffer::Buffer::with_capacity(12 + groups.capacity() + colors.capacity());
 
-#[derive(Debug, Clone)]
-enum ColorModel {
-    CMYK,
-    RGB,
-    LAB,
-    Gray,
-}
+    //file metadata
+    buf.write_slice(types::FILE_SIGNATURE);
+    buf.write_u32(types::VERSION);
+    //number of blocks
+    buf.write_u32((groups.len() + colors.len()) as u32);
 
-#[derive(Debug, Clone)]
-enum ColorValue {
-    CMYK(f32, f32, f32, f32),
-    RGB(f32, f32, f32),
-    LAB(f32, f32, f32),
-    Gray(f32),
-}
+    //write groups
+    groups.into_iter().for_each(|group| group.write(&mut buf));
 
-#[derive(Debug, Clone)]
-struct Block<'a> {
-    pub block_type: BlockType,
-    pub name: &'a str,
-    pub color_type: ColorType,
-    pub color: ColorType,
-}
+    //write single colors
+    colors.into_iter().for_each(|block| block.write(&mut buf));
 
-pub fn create_ase() -> Vec<u8> {
-    let buf = Vec::new();
-    buf.append(FILE_SIGNATURE);
-    vec![]
+    buf.to_vec()
 }

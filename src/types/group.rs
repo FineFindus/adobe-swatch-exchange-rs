@@ -86,7 +86,7 @@ mod tests {
         let mut buf = Buffer::with_capacity(72);
         group.write(&mut buf);
         assert_eq!(
-            buf.to_vec(),
+            buf.into_vec(),
             vec![
                 0, 0, 192, 1, 0, 0, 0, 72, 0, 11, 0, 103, 0, 114, 0, 111, 0, 117, 0, 112, 0, 32, 0,
                 110, 0, 97, 0, 109, 0, 101, 0, 0, 0, 0, 0, 1, 0, 0, 0, 24, 0, 11, 0, 108, 0, 105,

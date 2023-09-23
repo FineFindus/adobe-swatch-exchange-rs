@@ -30,7 +30,7 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
     //write single colors
     colors.into_iter().for_each(|block| block.write(&mut buf));
 
-    buf.to_vec()
+    buf.into_vec()
 }
 
 #[cfg(test)]

@@ -42,7 +42,7 @@ impl Buffer {
     }
 
     /// Returns the written buffer as a [`Vec<u8>`] of bytes.
-    pub fn to_vec(self) -> Vec<u8> {
+    pub fn into_vec(self) -> Vec<u8> {
         self.data
     }
 }

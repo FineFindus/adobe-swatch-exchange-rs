@@ -5,8 +5,6 @@ mod types;
 
 /// Creates an Adobe Swatch Exchange (ASE) file.
 ///
-///
-///
 /// # Examples
 /// ```rust
 /// # use adobe_swatch_exchange::ColorBlock;

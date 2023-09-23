@@ -2,7 +2,7 @@
 /// Specifies how the color behaves in a document.
 ///
 /// Information from <https://pypi.org/project/swatch/>
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum ColorType {
     /// Represents Global colors in ASE files.
     ///
@@ -23,5 +23,6 @@ pub enum ColorType {
     ///
     /// Process colors are standard colors, typically the default when defining a new color in tools like Illustrator.
     /// They are mixed from either RGB or CMYK, depending on the document's color mode.
+    #[default]
     Normal = 2,
 }

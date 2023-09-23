@@ -46,3 +46,28 @@ impl<'a> ColorBlock<'a> {
         2 + self.name.len() as u32 + 2 + 4 + self.color.calculate_length() + 2
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_calculates_length_correctly() {
+        let block = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+        assert_eq!(block.calculate_length(), 18);
+    }
+
+    #[test]
+    fn it_writes_bytes_correctly() {
+        let block = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+        let mut buf = Buffer::with_capacity(18);
+        block.write(&mut buf);
+        assert_eq!(
+            buf.to_vec(),
+            vec![
+                0, 0, 0, 1, 0, 0, 0, 18, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97,
+                121, 63, 0, 0, 0, 0, 2
+            ]
+        );
+    }
+}

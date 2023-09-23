@@ -11,7 +11,7 @@ mod types;
 /// # use adobe_swatch_exchange::ColorValue;
 /// # use adobe_swatch_exchange::ColorType;
 /// # use adobe_swatch_exchange::create_ase;
-/// let color = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+/// let color = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
 /// let ase = create_ase(vec![], vec![color]);
 /// # assert_eq!( ase, vec![ 65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 18, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2 ]);
 /// ```
@@ -47,7 +47,7 @@ mod tests {
 
     #[test]
     fn it_writes_single_color() {
-        let block = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         assert_eq!(
             create_ase(vec![], vec![block]),
             vec![
@@ -60,17 +60,21 @@ mod tests {
     #[test]
     fn it_writes_group_color() {
         let group = Group::new(
-            "group name",
+            "group name".to_owned(),
             vec![
-                ColorBlock::new("light grey", ColorValue::Gray(0.5), ColorType::Normal),
                 ColorBlock::new(
-                    "dark red",
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
                     ColorValue::Rgb(0.5, 0.3, 0.1),
                     ColorType::Normal,
                 ),
             ],
         );
-        let block = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         assert_eq!(
             create_ase(vec![group], vec![block]),
             vec![
@@ -88,17 +92,21 @@ mod tests {
     #[test]
     fn it_writes_group_and_single_color() {
         let group = Group::new(
-            "group name",
+            "group name".to_owned(),
             vec![
-                ColorBlock::new("light grey", ColorValue::Gray(0.5), ColorType::Normal),
                 ColorBlock::new(
-                    "dark red",
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
                     ColorValue::Rgb(0.5, 0.3, 0.1),
                     ColorType::Normal,
                 ),
             ],
         );
-        let block = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         assert_eq!(
             create_ase(vec![group], vec![block]),
             vec![

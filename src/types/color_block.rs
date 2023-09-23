@@ -4,18 +4,18 @@ use super::{block_type::BlockType, ColorType, ColorValue};
 
 /// A single color with an associated name.
 #[derive(Debug, Clone)]
-pub struct ColorBlock<'a> {
+pub struct ColorBlock {
     /// The name associated with the color
-    pub name: &'a str,
+    pub name: String,
     /// The specific color value of the block.
     pub color: ColorValue,
     /// The type of color
     pub color_type: ColorType,
 }
 
-impl<'a> ColorBlock<'a> {
+impl ColorBlock {
     /// Creates a new ColorBlock with the given name, color type and color.
-    pub fn new(name: &'a str, color: ColorValue, color_type: ColorType) -> Self {
+    pub fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
         Self {
             name,
             color_type,
@@ -29,7 +29,7 @@ impl<'a> ColorBlock<'a> {
         buf.write_u32(self.calculate_length());
         //name length, +1 for null terminator
         buf.write_u16(self.name.len() as u16 + 1);
-        buf.write_null_terminated_utf_16_str(self.name);
+        buf.write_null_terminated_utf_16_str(&self.name);
 
         //write color
         buf.write_slice(self.color.get_type());
@@ -53,13 +53,13 @@ mod tests {
 
     #[test]
     fn it_calculates_length_correctly() {
-        let block = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         assert_eq!(block.calculate_length(), 18);
     }
 
     #[test]
     fn it_writes_bytes_correctly() {
-        let block = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         let mut buf = Buffer::with_capacity(18);
         block.write(&mut buf);
         assert_eq!(

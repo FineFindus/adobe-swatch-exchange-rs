@@ -4,16 +4,16 @@ use super::{block_type::BlockType, ColorBlock};
 
 ///Represents a named collection of colors
 #[derive(Debug, Clone)]
-pub struct Group<'a> {
+pub struct Group {
     /// The name of the group
-    pub name: &'a str,
+    pub name: String,
     /// The colors in the group
-    pub blocks: Vec<ColorBlock<'a>>,
+    pub blocks: Vec<ColorBlock>,
 }
 
-impl<'a> Group<'a> {
+impl Group {
     /// Creates a new group of colors, grouped together with the specified name.
-    pub fn new(name: &'a str, blocks: Vec<ColorBlock<'a>>) -> Self {
+    pub fn new(name: String, blocks: Vec<ColorBlock>) -> Self {
         Self { name, blocks }
     }
 
@@ -24,7 +24,7 @@ impl<'a> Group<'a> {
 
         //name length, +1 for null terminator
         buf.write_u16(self.name.len() as u16 + 1);
-        buf.write_null_terminated_utf_16_str(self.name);
+        buf.write_null_terminated_utf_16_str(&self.name);
 
         //write colors
         self.blocks.into_iter().for_each(|block| block.write(buf));
@@ -57,11 +57,15 @@ mod tests {
     #[test]
     fn it_calculates_length_correctly() {
         let group = Group::new(
-            "group na,e",
+            "group name".to_owned(),
             vec![
-                ColorBlock::new("light grey", ColorValue::Gray(0.5), ColorType::Normal),
                 ColorBlock::new(
-                    "dark red",
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
                     ColorValue::Rgb(0.5, 0.3, 0.1),
                     ColorType::Normal,
                 ),
@@ -73,11 +77,15 @@ mod tests {
     #[test]
     fn it_writes_bytes_correctly() {
         let group = Group::new(
-            "group name",
+            "group name".to_owned(),
             vec![
-                ColorBlock::new("light grey", ColorValue::Gray(0.5), ColorType::Normal),
                 ColorBlock::new(
-                    "dark red",
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
                     ColorValue::Rgb(0.5, 0.3, 0.1),
                     ColorType::Normal,
                 ),

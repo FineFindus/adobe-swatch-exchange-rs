@@ -9,7 +9,13 @@ mod types;
 ///
 /// # Examples
 /// ```rust
-///
+/// # use adobe_swatch_exchange::ColorBlock;
+/// # use adobe_swatch_exchange::ColorValue;
+/// # use adobe_swatch_exchange::ColorType;
+/// # use adobe_swatch_exchange::create_ase;
+/// let color = ColorBlock::new("name", ColorValue::Gray(0.5), ColorType::Normal);
+/// let ase = create_ase(vec![], vec![color]);
+/// # assert_eq!( ase, vec![ 65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 18, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2 ]);
 /// ```
 pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
     let mut buf = buffer::Buffer::with_capacity(12 + groups.capacity() + colors.capacity());

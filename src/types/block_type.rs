@@ -1,6 +1,6 @@
 /// Block indentifier
 #[derive(Debug, Clone)]
-pub(super) enum BlockType {
+pub(crate) enum BlockType {
     /// Indicates the start of a [`Group`]
     GroupStart = 0xc001,
     /// Indicates the end of a [`Group`]

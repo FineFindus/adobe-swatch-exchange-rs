@@ -25,7 +25,7 @@ impl ColorBlock {
 
     /// Write the block to the given [`Buffer`]
     pub(crate) fn write(self, buf: &mut Buffer) {
-        buf.write_u32(BlockType::ColorEntry as u32);
+        buf.write_u16(BlockType::ColorEntry as u16);
         buf.write_u32(self.calculate_length());
         //name length, +1 for null terminator
         buf.write_u16(self.name.len() as u16 + 1);
@@ -65,8 +65,8 @@ mod tests {
         assert_eq!(
             buf.into_vec(),
             vec![
-                0, 0, 0, 1, 0, 0, 0, 18, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97,
-                121, 63, 0, 0, 0, 0, 2
+                0, 1, 0, 0, 0, 18, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63,
+                0, 0, 0, 0, 2
             ]
         );
     }

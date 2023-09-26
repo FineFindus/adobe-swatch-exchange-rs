@@ -19,7 +19,7 @@ impl Group {
 
     /// Write the group to the given [`Buffer`]
     pub(crate) fn write(self, buf: &mut Buffer) {
-        buf.write_u32(BlockType::GroupStart as u32);
+        buf.write_u16(BlockType::GroupStart as u16);
         buf.write_u32(self.calculate_length());
 
         //name length, +1 for null terminator
@@ -29,7 +29,7 @@ impl Group {
         //write colors
         self.blocks.into_iter().for_each(|block| block.write(buf));
 
-        buf.write_u32(BlockType::GroupEnd as u32);
+        buf.write_u16(BlockType::GroupEnd as u16);
     }
 
     /// Calculate the length of an group.
@@ -96,12 +96,12 @@ mod tests {
         assert_eq!(
             buf.into_vec(),
             vec![
-                0, 0, 192, 1, 0, 0, 0, 72, 0, 11, 0, 103, 0, 114, 0, 111, 0, 117, 0, 112, 0, 32, 0,
-                110, 0, 97, 0, 109, 0, 101, 0, 0, 0, 0, 0, 1, 0, 0, 0, 24, 0, 11, 0, 108, 0, 105,
-                0, 103, 0, 104, 0, 116, 0, 32, 0, 103, 0, 114, 0, 101, 0, 121, 0, 0, 71, 114, 97,
-                121, 63, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 30, 0, 9, 0, 100, 0, 97, 0, 114, 0,
-                107, 0, 32, 0, 114, 0, 101, 0, 100, 0, 0, 82, 71, 66, 32, 63, 0, 0, 0, 62, 153,
-                153, 154, 61, 204, 204, 205, 0, 2, 0, 0, 192, 2
+                192, 1, 0, 0, 0, 72, 0, 11, 0, 103, 0, 114, 0, 111, 0, 117, 0, 112, 0, 32, 0, 110,
+                0, 97, 0, 109, 0, 101, 0, 0, 0, 1, 0, 0, 0, 24, 0, 11, 0, 108, 0, 105, 0, 103, 0,
+                104, 0, 116, 0, 32, 0, 103, 0, 114, 0, 101, 0, 121, 0, 0, 71, 114, 97, 121, 63, 0,
+                0, 0, 0, 2, 0, 1, 0, 0, 0, 30, 0, 9, 0, 100, 0, 97, 0, 114, 0, 107, 0, 32, 0, 114,
+                0, 101, 0, 100, 0, 0, 82, 71, 66, 32, 63, 0, 0, 0, 62, 153, 153, 154, 61, 204, 204,
+                205, 0, 2, 192, 2
             ]
         );
     }

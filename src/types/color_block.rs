@@ -40,10 +40,10 @@ impl ColorBlock {
     /// Calculate the length of an color block.
     ///
     /// The length is calculate the following way:
-    /// name length (2) + name + null terminator (2)
+    /// name length (2) + name * 2 (UTF 16) + null terminator (2)
     /// + color type (4) + color value (1/3/4) + type (2)
     pub(super) fn calculate_length(&self) -> u32 {
-        2 + self.name.len() as u32 + 2 + 4 + self.color.calculate_length() + 2
+        2 + self.name.len() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
     }
 }
 

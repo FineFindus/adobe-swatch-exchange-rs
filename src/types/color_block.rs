@@ -55,7 +55,6 @@ impl ColorBlock {
         //read name bytes, but stop before null byte
         let name_bytes: Vec<u16> = bytes[2..(name_length as usize * 2)]
             .chunks_exact(2)
-            .into_iter()
             .map(|bytes| u16::from_be_bytes(bytes.try_into().unwrap()))
             .collect();
         let name = String::from_utf16(&name_bytes)?;
@@ -99,9 +98,7 @@ mod tests {
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         assert_eq!(
             block,
-            ColorBlock::parse(&vec![
-                0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2
-            ])
+            ColorBlock::parse(&[0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2])
             .unwrap()
         );
     }

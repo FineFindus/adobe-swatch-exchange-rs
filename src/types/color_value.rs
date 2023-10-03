@@ -105,7 +105,7 @@ mod tests {
 
     #[test]
     fn it_parses_rgb() {
-        let rgb = ColorValue::Rgb(0.7490196078431373, 0.3803921568627451, 0.41568627450980394);
+        let rgb = ColorValue::Rgb(0.749_019_6, 0.380_392_16, 0.415_686_28);
         let mut buffer = Buffer::with_capacity(20);
         buffer.write_slice(rgb.get_type());
         rgb.clone().write_values(&mut buffer);
@@ -116,7 +116,7 @@ mod tests {
 
     #[test]
     fn it_parses_lab() {
-        let rgb = ColorValue::Lab(52.5823974609375, 38.5067749023437, 12.4209403991699);
+        let rgb = ColorValue::Lab(52.582_397, 38.506_775, 12.420_94);
         let mut buffer = Buffer::with_capacity(20);
         buffer.write_slice(rgb.get_type());
         rgb.clone().write_values(&mut buffer);
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn it_parses_gray() {
-        let gray = ColorValue::Gray(0.7490196078431373);
+        let gray = ColorValue::Gray(0.749_019_6);
         let mut buffer = Buffer::with_capacity(8);
         buffer.write_slice(gray.get_type());
         gray.clone().write_values(&mut buffer);

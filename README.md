@@ -1,5 +1,5 @@
 # Adobe Swatch Exchange
-A small, dependencies-less Rust library for writing and reading from `.ase` files.
+A small, dependencies-free Rust library for writing and reading from `.ase` files.
 
 ASE has the option to either store single colors or colors in a named group. Each color consists of a name, the actual color data (in RGB, CMYK, LAB or Gray format), and a color type, which indicates how the color behaves in the document.
 

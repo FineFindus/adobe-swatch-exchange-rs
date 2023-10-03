@@ -54,18 +54,18 @@ mod tests {
     #[test]
     fn it_calculates_length_correctly() {
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
-        assert_eq!(block.calculate_length(), 18);
+        assert_eq!(block.calculate_length(), 22);
     }
 
     #[test]
     fn it_writes_bytes_correctly() {
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
-        let mut buf = Buffer::with_capacity(18);
+        let mut buf = Buffer::with_capacity(22);
         block.write(&mut buf);
         assert_eq!(
             buf.into_vec(),
             vec![
-                0, 1, 0, 0, 0, 18, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63,
+                0, 1, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63,
                 0, 0, 0, 0, 2
             ]
         );

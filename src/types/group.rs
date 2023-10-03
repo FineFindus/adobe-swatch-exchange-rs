@@ -43,7 +43,7 @@ impl Group {
             + self
                 .blocks
                 .iter()
-                .map(|block| block.calculate_length() + 2)
+                .map(|block| block.calculate_length() + 2 + 4)
                 .sum::<u32>()
     }
 }
@@ -71,7 +71,7 @@ mod tests {
                 ),
             ],
         );
-        assert_eq!(group.calculate_length(), 100);
+        assert_eq!(group.calculate_length(), 108);
     }
 
     #[test]
@@ -91,12 +91,12 @@ mod tests {
                 ),
             ],
         );
-        let mut buf = Buffer::with_capacity(100);
+        let mut buf = Buffer::with_capacity(108);
         group.write(&mut buf);
         assert_eq!(
             buf.into_vec(),
             vec![
-                192, 1, 0, 0, 0, 100, 0, 11, 0, 103, 0, 114, 0, 111, 0, 117, 0, 112, 0, 32, 0, 110,
+                192, 1, 0, 0, 0, 108, 0, 11, 0, 103, 0, 114, 0, 111, 0, 117, 0, 112, 0, 32, 0, 110,
                 0, 97, 0, 109, 0, 101, 0, 0, 0, 1, 0, 0, 0, 34, 0, 11, 0, 108, 0, 105, 0, 103, 0,
                 104, 0, 116, 0, 32, 0, 103, 0, 114, 0, 101, 0, 121, 0, 0, 71, 114, 97, 121, 63, 0,
                 0, 0, 0, 2, 0, 1, 0, 0, 0, 38, 0, 9, 0, 100, 0, 97, 0, 114, 0, 107, 0, 32, 0, 114,

@@ -2,7 +2,13 @@
 name = "adobe-swatch-exchange"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+rust-version = "1.56"
+readme = "README.md"
+license = "MPL-2.0"
+homepage = "https://github.com/FineFindus/adobe-swatch-exchange"
+repository = "https://github.com/FineFindus/adobe-swatch-exchange"
+keywords = ["ase", "adobe", "adobe-swatch-exchange", "palette", "swatch"]
+categories = ["parser-implementations"]
+description = "Read and write .ase files"
 
 [dependencies]

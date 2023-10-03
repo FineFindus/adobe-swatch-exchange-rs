@@ -98,7 +98,9 @@ mod tests {
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         assert_eq!(
             block,
-            ColorBlock::parse(&[0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2])
+            ColorBlock::parse(&[
+                0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2
+            ])
             .unwrap()
         );
     }

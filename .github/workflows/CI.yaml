@@ -38,6 +38,15 @@ jobs:
         with:
           command: test
 
+  semver-checks:
+    name: Check Semantic Versioning violations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest

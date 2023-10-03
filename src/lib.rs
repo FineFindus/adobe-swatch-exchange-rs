@@ -1,6 +1,12 @@
+#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(unsafe_code)]
+
+pub use error::ASEError;
+use types::BlockType;
 pub use types::{ColorBlock, ColorType, ColorValue, Group};
 
 mod buffer;
+mod error;
 mod types;
 
 /// Creates an Adobe Swatch Exchange (ASE) file.
@@ -31,6 +37,78 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
     colors.into_iter().for_each(|block| block.write(&mut buf));
 
     buf.into_vec()
+}
+
+/// Read groups and single colors from the .ase file.
+///
+/// # Errors
+///
+/// This function will return an error if either a read to the given data fails,
+/// or the ASE file is invalid.
+///
+/// # Examples
+/// ```rust
+/// # use adobe_swatch_exchange::read_ase;
+/// //any source
+/// let source = vec![65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 0];
+/// let (groups, colors) = read_ase(&*source).unwrap();
+/// # assert_eq!((groups, colors), (vec![], vec![]));
+/// ```
+pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBlock>), ASEError> {
+    let mut buf_u32 = [0; 4];
+
+    //read magic bytes
+    ase.read_exact(&mut buf_u32)?;
+    if &buf_u32 != types::FILE_SIGNATURE {
+        return Err(ASEError::Invalid);
+    }
+
+    //read version,should be 1.0
+    ase.read_exact(&mut buf_u32)?;
+    if buf_u32 != types::VERSION.to_be_bytes() {
+        return Err(ASEError::Invalid);
+    }
+
+    ase.read_exact(&mut buf_u32)?;
+    let number_of_blocks = u32::from_be_bytes(buf_u32);
+
+    let mut groups = Vec::new();
+    let mut color_blocks = Vec::new();
+    let mut buf_u16 = [0; 2];
+
+    for _ in 0..number_of_blocks {
+        ase.read_exact(&mut buf_u16)?;
+        let block_type = BlockType::try_from(u16::from_be_bytes(buf_u16))?;
+
+        ase.read_exact(&mut buf_u32)?;
+        let block_length = u32::from_be_bytes(buf_u32);
+
+        let mut block = vec![0; block_length as usize];
+        ase.read_exact(&mut block)?;
+
+        //parse block data and add it appropriate vec
+        match block_type {
+            BlockType::GroupStart => {
+                let block = Group::parse(&block)?;
+                groups.push(block);
+
+                // read the group end block
+                ase.read_exact(&mut buf_u16)?;
+                if BlockType::try_from(u16::from_be_bytes(buf_u16))? != BlockType::GroupEnd {
+                    // group has no end, file is invalid
+                    return Err(ASEError::Invalid);
+                }
+            }
+            //read by the group end
+            BlockType::GroupEnd => unreachable!(),
+            BlockType::ColorEntry => {
+                let block = ColorBlock::parse(&block)?;
+                color_blocks.push(block);
+            }
+        };
+    }
+
+    Ok((groups, color_blocks))
 }
 
 #[cfg(test)]
@@ -117,5 +195,72 @@ mod tests {
                 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2
             ]
         )
+    }
+
+    #[test]
+    fn it_reads_empty() {
+        let res = read_ase(&*vec![65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 0]);
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), (vec![], vec![]));
+    }
+
+    #[test]
+    fn it_reads_single_color() {
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
+        let res = read_ase(&*create_ase(vec![], vec![block.clone()]));
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res, (vec![], vec![block]));
+        assert_eq!(res.1.first().unwrap().name, "name".to_owned());
+    }
+
+    #[test]
+    fn it_reads_group() {
+        let group = Group::new(
+            "group name".to_owned(),
+            vec![
+                ColorBlock::new(
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
+                    ColorValue::Rgb(0.5, 0.3, 0.1),
+                    ColorType::Normal,
+                ),
+            ],
+        );
+        let res = read_ase(&*create_ase(vec![group.clone()], vec![]));
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res, (vec![group], vec![]));
+        assert_eq!(res.0.first().unwrap().name, "group name".to_owned());
+    }
+
+    #[test]
+    fn it_reads_group_and_single_color() {
+        let group = Group::new(
+            "group name".to_owned(),
+            vec![
+                ColorBlock::new(
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
+                    ColorValue::Rgb(0.5, 0.3, 0.1),
+                    ColorType::Normal,
+                ),
+            ],
+        );
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
+        let res = read_ase(&*create_ase(vec![group.clone()], vec![block.clone()]));
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res, (vec![group], vec![block]));
+        assert_eq!(res.0.first().unwrap().name, "group name".to_owned());
+        assert_eq!(res.1.first().unwrap().name, "name".to_owned());
     }
 }

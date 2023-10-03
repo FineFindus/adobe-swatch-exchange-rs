@@ -1,8 +1,10 @@
+use crate::error::ASEError;
+
 /// Type of Color in the ASE file.
 /// Specifies how the color behaves in a document.
 ///
 /// Information from <https://pypi.org/project/swatch/>
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub enum ColorType {
     /// Represents Global colors in ASE files.
     ///
@@ -25,4 +27,17 @@ pub enum ColorType {
     /// They are mixed from either RGB or CMYK, depending on the document's color mode.
     #[default]
     Normal = 2,
+}
+
+impl TryFrom<&u8> for ColorType {
+    type Error = ASEError;
+
+    fn try_from(value: &u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(ColorType::Global),
+            1 => Ok(ColorType::Spot),
+            2 => Ok(ColorType::Normal),
+            _ => Err(ASEError::Invalid),
+        }
+    }
 }

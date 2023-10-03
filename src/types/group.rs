@@ -1,9 +1,9 @@
-use crate::buffer::Buffer;
+use crate::{buffer::Buffer, error::ASEError};
 
 use super::{block_type::BlockType, ColorBlock};
 
 ///Represents a named collection of colors
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Group {
     /// The name of the group
     pub name: String,
@@ -45,6 +45,55 @@ impl Group {
                 .iter()
                 .map(|block| block.calculate_length() + 2 + 4)
                 .sum::<u32>()
+    }
+
+    /// Parses a [`Group`] from bytes.
+    ///
+    /// This will extract the name and than try to parse the left-over bytes
+    /// as [`ColorBlock`]s. It stops when either the given bytes are 'empty',parsing a [`ColorBlock`]
+    /// fails or the next block is not a [`ColorBlock`].
+    ///
+    /// # Errors
+    /// This function will return an error if either the name cannot be constructed, or
+    /// if it cannot be correctly parsed. In either case an [`ASEError::Invalid`] is returned.
+    pub(crate) fn parse(bytes: &[u8]) -> Result<Self, ASEError> {
+        let name_length = u16::from_be_bytes(bytes[0..2].try_into()?);
+        //read name bytes, but stop before not byte
+        let name_bytes: Vec<u16> = bytes[2..(name_length as usize * 2)]
+            .chunks_exact(2)
+            .into_iter()
+            .map(|bytes| u16::from_be_bytes(bytes.try_into().unwrap()))
+            .collect();
+        let name = String::from_utf16(&name_bytes)?;
+
+        let mut pointer = name_length as usize * 2 + 2;
+        let mut blocks = Vec::new();
+        loop {
+            if pointer >= bytes.len() - 1 {
+                break;
+            }
+
+            let block_type = BlockType::try_from(u16::from_be_bytes(
+                bytes[pointer..(pointer + 2)].try_into()?,
+            ))?;
+
+            if block_type != BlockType::ColorEntry {
+                break;
+            }
+            pointer += 2;
+
+            let block_length =
+                u32::from_be_bytes(bytes[pointer..(pointer + 4)].try_into()?) as usize;
+            pointer += 4;
+
+            let Ok(block) = ColorBlock::parse(&bytes[pointer..]) else {
+                break;
+            };
+            pointer += block_length;
+            blocks.push(block);
+        }
+
+        Ok(Self::new(name, blocks))
     }
 }
 
@@ -103,6 +152,36 @@ mod tests {
                 0, 101, 0, 100, 0, 0, 82, 71, 66, 32, 63, 0, 0, 0, 62, 153, 153, 154, 61, 204, 204,
                 205, 0, 2, 192, 2
             ]
+        );
+    }
+
+    #[test]
+    fn it_reads_bytes_correctly() {
+        let group = Group::new(
+            "group name".to_owned(),
+            vec![
+                ColorBlock::new(
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
+                    ColorValue::Rgb(0.5, 0.3, 0.1),
+                    ColorType::Normal,
+                ),
+            ],
+        );
+        assert_eq!(
+            group,
+            Group::parse(&vec![
+                0, 11, 0, 103, 0, 114, 0, 111, 0, 117, 0, 112, 0, 32, 0, 110, 0, 97, 0, 109, 0,
+                101, 0, 0, 0, 1, 0, 0, 0, 34, 0, 11, 0, 108, 0, 105, 0, 103, 0, 104, 0, 116, 0, 32,
+                0, 103, 0, 114, 0, 101, 0, 121, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2, 0, 1, 0,
+                0, 0, 38, 0, 9, 0, 100, 0, 97, 0, 114, 0, 107, 0, 32, 0, 114, 0, 101, 0, 100, 0, 0,
+                82, 71, 66, 32, 63, 0, 0, 0, 62, 153, 153, 154, 61, 204, 204, 205, 0, 2, 192, 2
+            ])
+            .unwrap()
         );
     }
 }

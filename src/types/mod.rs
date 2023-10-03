@@ -4,6 +4,7 @@ mod color_type;
 mod color_value;
 mod group;
 
+pub(super) use block_type::BlockType;
 pub use color_block::ColorBlock;
 pub use color_type::ColorType;
 pub use color_value::ColorValue;

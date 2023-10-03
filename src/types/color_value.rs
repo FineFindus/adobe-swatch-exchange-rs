@@ -1,7 +1,7 @@
-use crate::buffer::Buffer;
+use crate::{buffer::Buffer, error::ASEError};
 
 /// Color data
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ColorValue {
     Cmyk(f32, f32, f32, f32),
     Rgb(f32, f32, f32),
@@ -53,5 +53,86 @@ impl ColorValue {
             ColorValue::Rgb(_, _, _) | ColorValue::Lab(_, _, _) => 12,
             ColorValue::Gray(_) => 4,
         }
+    }
+}
+
+impl TryFrom<&[u8]> for ColorValue {
+    type Error = ASEError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        match &value[..4] {
+            b"CMYK" => {
+                let cyan = f32::from_be_bytes(value[4..8].try_into()?);
+                let magenta = f32::from_be_bytes(value[8..12].try_into()?);
+                let yellow = f32::from_be_bytes(value[12..16].try_into()?);
+                let black = f32::from_be_bytes(value[16..20].try_into()?);
+                Ok(ColorValue::Cmyk(cyan, magenta, yellow, black))
+            }
+            b"RGB " => {
+                let red = f32::from_be_bytes(value[4..8].try_into()?);
+                let green = f32::from_be_bytes(value[8..12].try_into()?);
+                let blue = f32::from_be_bytes(value[12..16].try_into()?);
+                Ok(ColorValue::Rgb(red, green, blue))
+            }
+            b"LAB " => {
+                let l = f32::from_be_bytes(value[4..8].try_into()?);
+                let a = f32::from_be_bytes(value[8..12].try_into()?);
+                let b = f32::from_be_bytes(value[12..16].try_into()?);
+                Ok(ColorValue::Lab(l, a, b))
+            }
+            b"Gray" => Ok(ColorValue::Gray(f32::from_be_bytes(
+                value[4..8].try_into()?,
+            ))),
+            _ => Err(ASEError::Invalid),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_parses_cmyk() {
+        let rgb = ColorValue::Cmyk(0.0, 49.0, 54.0, 25.0);
+        let mut buffer = Buffer::with_capacity(20);
+        buffer.write_slice(rgb.get_type());
+        rgb.clone().write_values(&mut buffer);
+        let res = ColorValue::try_from(buffer.into_vec().as_slice());
+        assert!(res.is_ok());
+        assert_eq!(rgb, res.unwrap());
+    }
+
+    #[test]
+    fn it_parses_rgb() {
+        let rgb = ColorValue::Rgb(0.7490196078431373, 0.3803921568627451, 0.41568627450980394);
+        let mut buffer = Buffer::with_capacity(20);
+        buffer.write_slice(rgb.get_type());
+        rgb.clone().write_values(&mut buffer);
+        let res = ColorValue::try_from(buffer.into_vec().as_slice());
+        assert!(res.is_ok());
+        assert_eq!(rgb, res.unwrap());
+    }
+
+    #[test]
+    fn it_parses_lab() {
+        let rgb = ColorValue::Lab(52.5823974609375, 38.5067749023437, 12.4209403991699);
+        let mut buffer = Buffer::with_capacity(20);
+        buffer.write_slice(rgb.get_type());
+        rgb.clone().write_values(&mut buffer);
+        let res = ColorValue::try_from(buffer.into_vec().as_slice());
+        assert!(res.is_ok());
+        assert_eq!(rgb, res.unwrap());
+    }
+
+    #[test]
+    fn it_parses_gray() {
+        let gray = ColorValue::Gray(0.7490196078431373);
+        let mut buffer = Buffer::with_capacity(8);
+        buffer.write_slice(gray.get_type());
+        gray.clone().write_values(&mut buffer);
+        let res = ColorValue::try_from(buffer.into_vec().as_slice());
+        assert!(res.is_ok());
+        assert_eq!(gray, res.unwrap());
     }
 }

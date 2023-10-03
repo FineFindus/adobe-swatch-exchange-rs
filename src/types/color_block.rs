@@ -1,9 +1,9 @@
-use crate::buffer::Buffer;
+use crate::{buffer::Buffer, error::ASEError};
 
 use super::{block_type::BlockType, ColorType, ColorValue};
 
 /// A single color with an associated name.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ColorBlock {
     /// The name associated with the color
     pub name: String,
@@ -45,6 +45,29 @@ impl ColorBlock {
     pub(super) fn calculate_length(&self) -> u32 {
         2 + self.name.len() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
     }
+
+    /// Parses a [`ColorBlock`] from bytes.
+    ///
+    /// # Errors
+    /// This function will return an error if parsing fails.
+    pub(crate) fn parse(bytes: &[u8]) -> Result<Self, ASEError> {
+        let name_length = u16::from_be_bytes(bytes[0..2].try_into()?);
+        //read name bytes, but stop before null byte
+        let name_bytes: Vec<u16> = bytes[2..(name_length as usize * 2)]
+            .chunks_exact(2)
+            .into_iter()
+            .map(|bytes| u16::from_be_bytes(bytes.try_into().unwrap()))
+            .collect();
+        let name = String::from_utf16(&name_bytes)?;
+
+        let color_value_start = name_length as usize * 2 + 2;
+        let color_value = ColorValue::try_from(&bytes[color_value_start..])?;
+
+        let color_type_start = color_value_start + color_value.calculate_length() as usize + 4;
+        let color_type = ColorType::try_from(&bytes[color_type_start + 1])?;
+
+        Ok(Self::new(name, color_value, color_type))
+    }
 }
 
 #[cfg(test)]
@@ -68,6 +91,18 @@ mod tests {
                 0, 1, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63,
                 0, 0, 0, 0, 2
             ]
+        );
+    }
+
+    #[test]
+    fn it_reads_bytes_correctly() {
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
+        assert_eq!(
+            block,
+            ColorBlock::parse(&vec![
+                0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2
+            ])
+            .unwrap()
         );
     }
 }

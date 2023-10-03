@@ -1,0 +1,32 @@
+name: Publish Release
+on:
+  release:
+    types: [published]
+
+jobs:
+  semver-checks:
+    name: Check Semantic Versioning violations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+
+  cargo-publish:
+    needs:
+      - semver-checks
+    name: Publish to Cargo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+      - uses: actions-rs/cargo@v1
+        continue-on-error: false
+        with:
+          command: publish
+          args: --token ${{ secrets.CARGO_API_KEY }}

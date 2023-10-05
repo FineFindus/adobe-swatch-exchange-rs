@@ -104,4 +104,13 @@ mod tests {
             .unwrap()
         );
     }
+
+    #[test]
+    fn it_reads_empty_name_correctly() {
+        let block = ColorBlock::new("".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
+        assert_eq!(
+            block,
+            ColorBlock::parse(&[0, 1, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2]).unwrap()
+        );
+    }
 }

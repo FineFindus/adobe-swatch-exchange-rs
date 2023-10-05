@@ -183,4 +183,34 @@ mod tests {
             .unwrap()
         );
     }
+
+    #[test]
+    fn it_reads_empty_name_correctly() {
+        let group = Group::new(
+            "".to_owned(),
+            vec![
+                ColorBlock::new(
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
+                    ColorValue::Rgb(0.5, 0.3, 0.1),
+                    ColorType::Normal,
+                ),
+            ],
+        );
+        assert_eq!(
+            group,
+            Group::parse(&[
+                0, 1, 0, 0, 0, 1, 0, 0, 0, 34, 0, 11, 0, 108, 0, 105, 0, 103, 0, 104, 0, 116, 0,
+                32, 0, 103, 0, 114, 0, 101, 0, 121, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2, 0,
+                1, 0, 0, 0, 38, 0, 9, 0, 100, 0, 97, 0, 114, 0, 107, 0, 32, 0, 114, 0, 101, 0, 100,
+                0, 0, 82, 71, 66, 32, 63, 0, 0, 0, 62, 153, 153, 154, 61, 204, 204, 205, 0, 2, 192,
+                2
+            ])
+            .unwrap()
+        );
+    }
 }

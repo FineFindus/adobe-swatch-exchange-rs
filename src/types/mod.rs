@@ -16,3 +16,9 @@ pub(crate) const FILE_SIGNATURE: &[u8; 4] = b"ASEF";
 
 /// Version of the ASE file.
 pub(crate) const VERSION: u32 = 0x00010000;
+
+#[derive(Debug, PartialEq)]
+pub(crate) enum GroupHold {
+    Holding,
+    Empty,
+}

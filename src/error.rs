@@ -8,14 +8,44 @@ pub enum ASEError {
     /// An error was encountered while parsing the ASE.
     ///
     /// This means that the input data did not conform to the ASE specification.
-    Invalid,
+    Invalid(ConformationError),
+    /// An error occured due to slice conversion issues.
+    SliceError,
+    /// An erorr occured due to Utf16 parsing issues.
+    UTF16Error,
+    /// An error occured due to an invalid color type.
+    ColorTypeError,
+    /// An error occured due to an invalid block type.
+    BlockTypeError,
+}
+
+#[derive(Debug)]
+pub enum ConformationError {
+    FileVersion,
+    FileSignature,
+    GroupEnd,
 }
 
 impl Display for ASEError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
+        let var_name = match self {
             ASEError::Io(err) => err.fmt(f),
-            ASEError::Invalid => write!(f, "ASE file is invalid"),
+            ASEError::Invalid(err) => write!(f, "ASE file is invalid: {err}"),
+            ASEError::SliceError => write!(f, "Error converting input slice"),
+            ASEError::UTF16Error => write!(f, "Error converting UTF16"),
+            ASEError::ColorTypeError => write!(f, "Error converting ColorType"),
+            ASEError::BlockTypeError => write!(f, "Error converting BlockType"),
+        };
+        var_name
+    }
+}
+
+impl Display for ConformationError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ConformationError::FileVersion => write!(f, "File version is not supported"),
+            ConformationError::FileSignature => write!(f, "Invalid file signature found"),
+            ConformationError::GroupEnd => write!(f, "Blocks must end to be valid"),
         }
     }
 }
@@ -30,12 +60,12 @@ impl From<io::Error> for ASEError {
 
 impl From<array::TryFromSliceError> for ASEError {
     fn from(_value: array::TryFromSliceError) -> Self {
-        ASEError::Invalid
+        ASEError::SliceError
     }
 }
 
 impl From<string::FromUtf16Error> for ASEError {
     fn from(_value: string::FromUtf16Error) -> Self {
-        ASEError::Invalid
+        ASEError::UTF16Error
     }
 }

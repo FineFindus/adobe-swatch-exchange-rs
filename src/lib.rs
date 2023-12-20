@@ -2,7 +2,7 @@
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 pub use error::ASEError;
-use types::BlockType;
+use types::{BlockType, GroupHold};
 pub use types::{ColorBlock, ColorType, ColorValue, Group};
 
 mod buffer;
@@ -60,13 +60,13 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
     //read magic bytes
     ase.read_exact(&mut buf_u32)?;
     if &buf_u32 != types::FILE_SIGNATURE {
-        return Err(ASEError::Invalid);
+        return Err(ASEError::Invalid(error::ConformationError::FileSignature));
     }
 
     //read version,should be 1.0
     ase.read_exact(&mut buf_u32)?;
     if buf_u32 != types::VERSION.to_be_bytes() {
-        return Err(ASEError::Invalid);
+        return Err(ASEError::Invalid(error::ConformationError::FileVersion));
     }
 
     ase.read_exact(&mut buf_u32)?;
@@ -75,6 +75,9 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
     let mut groups = Vec::new();
     let mut color_blocks = Vec::new();
     let mut buf_u16 = [0; 2];
+
+    let mut group_hld = types::GroupHold::Empty;
+    let mut group_hld_value = Group::default();
 
     for _ in 0..number_of_blocks {
         ase.read_exact(&mut buf_u16)?;
@@ -90,20 +93,28 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         match block_type {
             BlockType::GroupStart => {
                 let block = Group::parse(&block)?;
-                groups.push(block);
-
-                // read the group end block
-                ase.read_exact(&mut buf_u16)?;
-                if BlockType::try_from(u16::from_be_bytes(buf_u16))? != BlockType::GroupEnd {
-                    // group has no end, file is invalid
-                    return Err(ASEError::Invalid);
+                if group_hld != types::GroupHold::Empty {
+                    return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
                 }
+                group_hld = types::GroupHold::Holding;
+                group_hld_value = block;
             }
             //read by the group end
-            BlockType::GroupEnd => unreachable!(),
+            BlockType::GroupEnd => match group_hld {
+                GroupHold::Holding => {
+                    groups.push(group_hld_value.clone());
+                    group_hld = GroupHold::Empty;
+                }
+                GroupHold::Empty => {
+                    return Err(ASEError::Invalid(error::ConformationError::GroupEnd))
+                }
+            },
             BlockType::ColorEntry => {
                 let block = ColorBlock::parse(&block)?;
-                color_blocks.push(block);
+                match group_hld {
+                    types::GroupHold::Holding => group_hld_value.blocks.push(block),
+                    types::GroupHold::Empty => color_blocks.push(block),
+                }
             }
         };
     }

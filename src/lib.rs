@@ -84,12 +84,19 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
 
     let mut blocks_to_read = number_of_blocks;
 
+    //allow skipping of empty blocks when a group-end block has a size field
+    let mut skipped = 0;
+
     while blocks_to_read > 0 {
         ase.read_exact(&mut buf_u16)?;
 
-        if buf_u16 == [0, 0] {
+        // Only skip if the next two bytes were zero and we haven't skipped two already.
+        if buf_u16 == [0, 0] && skipped < 2 {
+            skipped += 1;
             continue;
         }
+
+        skipped = 0;
 
         let block_type = BlockType::try_from(u16::from_be_bytes(buf_u16))?;
 
@@ -97,6 +104,9 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
             return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
         }
 
+        // block length for GroupEnd blocks should always be zero, the `skipped`
+        // variable above is intended to help us avoid the issue where the size
+        // is specified.
         let block_length = if block_type != BlockType::GroupEnd {
             ase.read_exact(&mut buf_u32)?;
             let block_length = u32::from_be_bytes(buf_u32);
@@ -115,6 +125,9 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                 if group_hold != types::GroupHold::Empty {
                     return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
                 }
+                // if the parsed block has any sub-blocks then it has already been built
+                // and only a group-end block may follow it. Otherwise we are free to
+                // add colors as they appear until a group-end block is encountered.
                 group_hold = if block.blocks.len() == 0 {
                     types::GroupHold::HoldingBuilding
                 } else {
@@ -148,10 +161,12 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         blocks_to_read -= 1;
     }
 
+    // if we haven't saved the last group, even if no end was found, go ahead and add it.
     if group_hold == GroupHold::HoldingBuilding {
         groups.push(group_hold_value);
     }
 
+    // if we received a built group, but it was terminated, it is an error.
     if group_hold == GroupHold::HoldingBuilt {
         return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
     }

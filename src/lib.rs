@@ -86,17 +86,16 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
 
     //allow skipping of empty blocks when a group-end block has a size field
     let mut skipped = 0;
+    let mut safe_to_skip = false;
 
     while blocks_to_read > 0 {
         ase.read_exact(&mut buf_u16)?;
 
         // Only skip if the next two bytes were zero and we haven't skipped two already.
-        if buf_u16 == [0, 0] && skipped < 2 {
+        if buf_u16 == [0, 0] && skipped < 2 && safe_to_skip {
             skipped += 1;
             continue;
         }
-
-        skipped = 0;
 
         let block_type = BlockType::try_from(u16::from_be_bytes(buf_u16))?;
 
@@ -110,8 +109,12 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         let block_length = if block_type != BlockType::GroupEnd {
             ase.read_exact(&mut buf_u32)?;
             let block_length = u32::from_be_bytes(buf_u32);
+            safe_to_skip = false;
             block_length
         } else {
+            safe_to_skip = true;
+            skipped = 0;
+
             0
         };
 

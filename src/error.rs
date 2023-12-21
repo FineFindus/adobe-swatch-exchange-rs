@@ -23,10 +23,18 @@ pub enum ASEError {
     InputDataParseError,
 }
 
+/// Indicates the cause of the file being an invalid ase.
 #[derive(Debug)]
 pub enum ConformationError {
+    /// An invalid file version was detected.
+    ///
+    /// Currently on a version of 1.0 is supported.
     FileVersion,
+    /// An invalid file signature was detected.
+    ///
+    /// The file signature must be 'ASEF'.
     FileSignature,
+    /// Groups must be terminated with a GroupEnd block.
     GroupEnd,
 }
 

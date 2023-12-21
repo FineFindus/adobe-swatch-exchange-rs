@@ -131,7 +131,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                 // if the parsed block has any sub-blocks then it has already been built
                 // and only a group-end block may follow it. Otherwise we are free to
                 // add colors as they appear until a group-end block is encountered.
-                group_hold = if block.blocks.len() == 0 {
+                group_hold = if block.blocks.is_empty() {
                     types::GroupHold::HoldingBuilding
                 } else {
                     blocks_to_read += 1;

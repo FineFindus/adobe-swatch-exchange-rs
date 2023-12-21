@@ -83,7 +83,7 @@ impl TryFrom<&[u8]> for ColorValue {
             b"Gray" => Ok(ColorValue::Gray(f32::from_be_bytes(
                 value[4..8].try_into()?,
             ))),
-            _ => Err(ASEError::Invalid),
+            _ => Err(ASEError::ColorFormat),
         }
     }
 }

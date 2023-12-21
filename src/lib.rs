@@ -60,13 +60,13 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
     //read magic bytes
     ase.read_exact(&mut buf_u32)?;
     if &buf_u32 != types::FILE_SIGNATURE {
-        return Err(ASEError::Invalid);
+        return Err(ASEError::Invalid(error::ConformationError::FileSignature));
     }
 
     //read version,should be 1.0
     ase.read_exact(&mut buf_u32)?;
     if buf_u32 != types::VERSION.to_be_bytes() {
-        return Err(ASEError::Invalid);
+        return Err(ASEError::Invalid(error::ConformationError::FileVersion));
     }
 
     ase.read_exact(&mut buf_u32)?;
@@ -96,7 +96,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                 ase.read_exact(&mut buf_u16)?;
                 if BlockType::try_from(u16::from_be_bytes(buf_u16))? != BlockType::GroupEnd {
                     // group has no end, file is invalid
-                    return Err(ASEError::Invalid);
+                    return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
                 }
             }
             //read by the group end

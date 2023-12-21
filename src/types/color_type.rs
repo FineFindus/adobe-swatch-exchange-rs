@@ -37,7 +37,7 @@ impl TryFrom<&u8> for ColorType {
             0 => Ok(ColorType::Global),
             1 => Ok(ColorType::Spot),
             2 => Ok(ColorType::Normal),
-            _ => Err(ASEError::Invalid),
+            _ => Err(ASEError::ColorTypeError),
         }
     }
 }

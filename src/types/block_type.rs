@@ -19,7 +19,7 @@ impl TryFrom<u16> for BlockType {
             0x0001 => Ok(Self::ColorEntry),
             0xc001 => Ok(Self::GroupStart),
             0xc002 => Ok(Self::GroupEnd),
-            _ => Err(ASEError::Invalid),
+            _ => Err(ASEError::BlockTypeError),
         }
     }
 }

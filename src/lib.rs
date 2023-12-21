@@ -1,7 +1,7 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
-pub use error::ASEError;
+pub use error::{ASEError, ConformationError};
 use types::BlockType;
 pub use types::{ColorBlock, ColorType, ColorValue, Group};
 

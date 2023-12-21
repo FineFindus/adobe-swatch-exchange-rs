@@ -28,11 +28,11 @@ pub enum ASEError {
 pub enum ConformationError {
     /// An invalid file version was detected.
     ///
-    /// Currently on a version of 1.0 is supported.
+    /// Currently only version `1.0`` of the format exists.
     FileVersion,
     /// An invalid file signature was detected.
     ///
-    /// The file signature must be 'ASEF'.
+    /// The file signature must be `ASEF`.
     FileSignature,
     /// Groups must be terminated with a GroupEnd block.
     GroupEnd,

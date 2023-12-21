@@ -113,6 +113,8 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
 
 #[cfg(test)]
 mod tests {
+    use crate::error::ConformationError;
+
     use super::*;
 
     #[test]
@@ -262,5 +264,116 @@ mod tests {
         assert_eq!(res, (vec![group], vec![block]));
         assert_eq!(res.0.first().unwrap().name, "group name".to_owned());
         assert_eq!(res.1.first().unwrap().name, "name".to_owned());
+    }
+
+    #[test]
+    fn it_returns_incorrect_block_type_error() {
+        let input_bad_block_type = vec![
+            65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109,
+            0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2,
+        ];
+        let parser_result = read_ase(&*input_bad_block_type);
+        assert!(
+            parser_result.is_err(),
+            "Parser result must be an error with an invalid block type."
+        );
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::BlockTypeError)),
+            "Expected bad block type error"
+        );
+    }
+
+    #[test]
+    fn it_returns_incorrect_color_type_error() {
+        let input_bad_color_type = vec![
+            65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109,
+            0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 3,
+        ];
+        let parser_result = read_ase(&*input_bad_color_type);
+        assert!(
+            parser_result.is_err(),
+            "Parser result must be an error with an invalid color type."
+        );
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::ColorTypeError)),
+            "Expected bad color type error"
+        );
+    }
+
+    #[test]
+    fn it_returns_incorrect_color_format_error() {
+        let input_bad_color_format = vec![
+            65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109,
+            0, 101, 0, 0, 72, 114, 97, 121, 63, 0, 0, 0, 0, 3,
+        ];
+        let parser_result: Result<(Vec<Group>, Vec<ColorBlock>), ASEError> =
+            read_ase(&*input_bad_color_format);
+        assert!(
+            parser_result.is_err(),
+            "Parser result must be an error with an invalid color format."
+        );
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::ColorFormat)),
+            "Expected bad color format error"
+        );
+    }
+
+    #[test]
+    fn it_returns_incorrect_signature_error() {
+        let input_bad_signature = vec![65, 80, 69, 70, 1, 1, 0, 0, 0, 0, 0, 0];
+        let parser_result = read_ase(&*input_bad_signature);
+        assert!(
+            parser_result.is_err(),
+            "Parser result must be an error with an invalid signature."
+        );
+        assert!(
+            matches!(
+                parser_result.err(),
+                Some(ASEError::Invalid(ConformationError::FileSignature))
+            ),
+            "Only ASEError::Invalid(error::ConformationError::FileSignature) should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_incorrect_version_error() {
+        let input_bad_file_version = vec![65, 83, 69, 70, 1, 1, 0, 0, 0, 0, 0, 0];
+        let parser_result = read_ase(&*input_bad_file_version);
+        assert!(
+            parser_result.is_err(),
+            "Parser result must be an error with an invalid file version."
+        );
+        assert!(
+            matches!(
+                parser_result.err(),
+                Some(ASEError::Invalid(ConformationError::FileVersion))
+            ),
+            "Only ASEError::Invalid(error::ConformationError::FileVersion) should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_incorrect_block_end_error() {
+        let input_bad_group_end = vec![
+            65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 2, 192, 1, 0, 0, 0, 108, 0, 11, 0, 103, 0, 114, 0,
+            111, 0, 117, 0, 112, 0, 32, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 0, 1, 0, 0, 0, 34, 0,
+            11, 0, 108, 0, 105, 0, 103, 0, 104, 0, 116, 0, 32, 0, 103, 0, 114, 0, 101, 0, 121, 0,
+            0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 38, 0, 9, 0, 100, 0, 97, 0, 114,
+            0, 107, 0, 32, 0, 114, 0, 101, 0, 100, 0, 0, 82, 71, 66, 32, 63, 0, 0, 0, 62, 153, 153,
+            154, 61, 204, 204, 205, 0, 2, 0, 1, 0, 1, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109, 0,
+            101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2,
+        ];
+        let parser_result = read_ase(&*input_bad_group_end);
+        assert!(
+            parser_result.is_err(),
+            "Parser result must be an error with an invalid group end."
+        );
+        assert!(
+            matches!(
+                parser_result.err(),
+                Some(ASEError::Invalid(ConformationError::GroupEnd))
+            ),
+            "Only ASEError::Invalid(error::ConformationError::GroupEnd) should be returned"
+        );
     }
 }

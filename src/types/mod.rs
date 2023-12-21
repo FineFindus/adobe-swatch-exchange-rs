@@ -9,6 +9,7 @@ pub use color_block::ColorBlock;
 pub use color_type::ColorType;
 pub use color_value::ColorValue;
 pub use group::Group;
+pub(crate) use group::GroupHold;
 
 /// Magic Bytes for .ase files.
 /// Equal to the bytes of `ASEF`.

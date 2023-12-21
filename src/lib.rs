@@ -1,8 +1,10 @@
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
+
 pub use error::{ASEError, ConformationError};
 use types::BlockType;
+use types::GroupHold;
 pub use types::{ColorBlock, ColorType, ColorValue, Group};
 
 mod buffer;
@@ -76,12 +78,32 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
     let mut color_blocks = Vec::new();
     let mut buf_u16 = [0; 2];
 
-    for _ in 0..number_of_blocks {
+    //temporary group to handle nonconformant group blocks
+    let mut group_hold = GroupHold::Empty;
+    let mut group_hold_value = Group::default();
+
+    let mut blocks_to_read = number_of_blocks;
+
+    while blocks_to_read > 0 {
         ase.read_exact(&mut buf_u16)?;
+
+        if buf_u16 == [0, 0] {
+            continue;
+        }
+
         let block_type = BlockType::try_from(u16::from_be_bytes(buf_u16))?;
 
-        ase.read_exact(&mut buf_u32)?;
-        let block_length = u32::from_be_bytes(buf_u32);
+        if block_type != BlockType::GroupEnd && group_hold == GroupHold::HoldingBuilt {
+            return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
+        }
+
+        let block_length = if block_type != BlockType::GroupEnd {
+            ase.read_exact(&mut buf_u32)?;
+            let block_length = u32::from_be_bytes(buf_u32);
+            block_length
+        } else {
+            0
+        };
 
         let mut block = vec![0; block_length as usize];
         ase.read_exact(&mut block)?;
@@ -90,22 +112,48 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         match block_type {
             BlockType::GroupStart => {
                 let block = Group::parse(&block)?;
-                groups.push(block);
-
-                // read the group end block
-                ase.read_exact(&mut buf_u16)?;
-                if BlockType::try_from(u16::from_be_bytes(buf_u16))? != BlockType::GroupEnd {
-                    // group has no end, file is invalid
+                if group_hold != types::GroupHold::Empty {
                     return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
                 }
+                group_hold = if block.blocks.len() == 0 {
+                    types::GroupHold::HoldingBuilding
+                } else {
+                    blocks_to_read += 1;
+                    types::GroupHold::HoldingBuilt
+                };
+                group_hold_value = block;
             }
             //read by the group end
-            BlockType::GroupEnd => unreachable!(),
+            BlockType::GroupEnd => match group_hold {
+                GroupHold::HoldingBuilding | GroupHold::HoldingBuilt => {
+                    groups.push(group_hold_value.clone());
+                    group_hold = GroupHold::Empty;
+                }
+                GroupHold::Empty => {
+                    return Err(ASEError::Invalid(error::ConformationError::GroupEnd))
+                }
+            },
             BlockType::ColorEntry => {
                 let block = ColorBlock::parse(&block)?;
-                color_blocks.push(block);
+                match group_hold {
+                    types::GroupHold::HoldingBuilding => group_hold_value.blocks.push(block),
+                    types::GroupHold::Empty => color_blocks.push(block),
+                    types::GroupHold::HoldingBuilt => {
+                        return Err(ASEError::Invalid(error::ConformationError::GroupEnd))
+                    }
+                }
             }
         };
+
+        blocks_to_read -= 1;
+    }
+
+    if group_hold == GroupHold::HoldingBuilding {
+        groups.push(group_hold_value);
+    }
+
+    if group_hold == GroupHold::HoldingBuilt {
+        return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
     }
 
     Ok((groups, color_blocks))

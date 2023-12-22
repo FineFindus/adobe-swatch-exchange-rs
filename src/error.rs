@@ -28,7 +28,7 @@ pub enum ASEError {
 pub enum ConformationError {
     /// An invalid file version was detected.
     ///
-    /// Currently only version `1.0`` of the format exists.
+    /// Currently only version `1.0` of the format exists.
     FileVersion,
     /// An invalid file signature was detected.
     ///

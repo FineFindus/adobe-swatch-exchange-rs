@@ -332,6 +332,37 @@ mod tests {
     }
 
     #[test]
+    fn it_reads_group_and_single_color_with_explicit_group_end_size() {
+        let group = Group::new(
+            "group name".to_owned(),
+            vec![
+                ColorBlock::new(
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
+                    ColorValue::Rgb(0.5, 0.3, 0.1),
+                    ColorType::Normal,
+                ),
+            ],
+        );
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
+        let input_ase_bytes = create_ase(vec![group.clone()], vec![block.clone()]);
+        let mut modified_ase_bytes = vec![0; 0];
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[..128]);
+        modified_ase_bytes.extend_from_slice(&[0; 4]);
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[128..]);
+        let res = read_ase(&*input_ase_bytes);
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res, (vec![group], vec![block]));
+        assert_eq!(res.0.first().unwrap().name, "group name".to_owned());
+        assert_eq!(res.1.first().unwrap().name, "name".to_owned());
+    }
+
+    #[test]
     fn it_returns_incorrect_block_type_error() {
         let input_bad_block_type = vec![
             65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109,

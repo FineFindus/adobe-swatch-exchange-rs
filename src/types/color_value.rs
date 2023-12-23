@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use crate::{buffer::Buffer, error::ASEError};
 
 /// Color data
@@ -60,30 +62,40 @@ impl TryFrom<&[u8]> for ColorValue {
     type Error = ASEError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        match &value[..4] {
-            b"CMYK" => {
-                let cyan = f32::from_be_bytes(value[4..8].try_into()?);
-                let magenta = f32::from_be_bytes(value[8..12].try_into()?);
-                let yellow = f32::from_be_bytes(value[12..16].try_into()?);
-                let black = f32::from_be_bytes(value[16..20].try_into()?);
+        let f32_from_bytes = |index: Range<usize>| {
+            value
+                .get(index)
+                .ok_or(ASEError::InputDataParseError)
+                .and_then(|data| {
+                    <&[u8] as TryInto<[u8; 4]>>::try_into(data)
+                        .map_err(|_| ASEError::InputDataParseError)
+                })
+                .and_then(|data| Ok(f32::from_be_bytes(data)))
+        };
+
+        match &value.get(..4) {
+            Some(b"CMYK") => {
+                let cyan = f32_from_bytes(4..8)?;
+                let magenta = f32_from_bytes(8..12)?;
+                let yellow = f32_from_bytes(12..16)?;
+                let black = f32_from_bytes(16..20)?;
                 Ok(ColorValue::Cmyk(cyan, magenta, yellow, black))
             }
-            b"RGB " => {
-                let red = f32::from_be_bytes(value[4..8].try_into()?);
-                let green = f32::from_be_bytes(value[8..12].try_into()?);
-                let blue = f32::from_be_bytes(value[12..16].try_into()?);
+            Some(b"RGB ") => {
+                let red = f32_from_bytes(4..8)?;
+                let green = f32_from_bytes(8..12)?;
+                let blue = f32_from_bytes(12..16)?;
                 Ok(ColorValue::Rgb(red, green, blue))
             }
-            b"LAB " => {
-                let l = f32::from_be_bytes(value[4..8].try_into()?);
-                let a = f32::from_be_bytes(value[8..12].try_into()?);
-                let b = f32::from_be_bytes(value[12..16].try_into()?);
+            Some(b"LAB ") => {
+                let l = f32_from_bytes(4..8)?;
+                let a = f32_from_bytes(8..12)?;
+                let b = f32_from_bytes(12..16)?;
                 Ok(ColorValue::Lab(l, a, b))
             }
-            b"Gray" => Ok(ColorValue::Gray(f32::from_be_bytes(
-                value[4..8].try_into()?,
-            ))),
-            _ => Err(ASEError::ColorFormat),
+            Some(b"Gray") => Ok(ColorValue::Gray(f32_from_bytes(4..8)?)),
+            Some(_) => Err(ASEError::ColorFormat),
+            _ => Err(ASEError::InputDataParseError),
         }
     }
 }
@@ -134,5 +146,36 @@ mod tests {
         let res = ColorValue::try_from(buffer.into_vec().as_slice());
         assert!(res.is_ok());
         assert_eq!(gray, res.unwrap());
+    }
+
+    #[test]
+    fn it_returns_input_data_parse_error() {
+        let data = vec![];
+        let res = ColorValue::try_from(&*data);
+        assert!(
+            matches!(res.err(), Some(ASEError::InputDataParseError)),
+            "Only ASEError::InputDataParseError should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_color_format_error() {
+        let data = b"ABCD";
+        let res = ColorValue::try_from(data.as_slice());
+        assert!(
+            matches!(res.err(), Some(ASEError::ColorFormat)),
+            "Only ASEError::ColorFormat should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_input_data_parse_error_for_oob() {
+        // try check pass in data starting with the correct header, but ending too early
+        let data = b"RGB sahdj";
+        let res = ColorValue::try_from(data.as_slice());
+        assert!(
+            matches!(res.err(), Some(ASEError::InputDataParseError)),
+            "Only ASEError::InputDataParseError should be returned"
+        );
     }
 }

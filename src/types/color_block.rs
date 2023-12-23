@@ -51,19 +51,34 @@ impl ColorBlock {
     /// # Errors
     /// This function will return an error if parsing fails.
     pub(crate) fn parse(bytes: &[u8]) -> Result<Self, ASEError> {
-        let name_length = u16::from_be_bytes(bytes[0..2].try_into()?);
+        let name_length = u16::from_be_bytes(
+            bytes
+                .get(0..2)
+                .ok_or(ASEError::InputDataParseError)?
+                .try_into()?,
+        );
         //read name bytes, but stop before null byte
-        let name_bytes: Vec<u16> = bytes[2..(name_length as usize * 2)]
+        let name_bytes: Vec<u16> = bytes
+            .get(2..(name_length as usize * 2))
+            .ok_or(ASEError::InputDataParseError)?
             .chunks_exact(2)
             .map(|bytes| u16::from_be_bytes(bytes.try_into().unwrap()))
             .collect();
         let name = String::from_utf16(&name_bytes)?;
 
         let color_value_start = name_length as usize * 2 + 2;
-        let color_value = ColorValue::try_from(&bytes[color_value_start..])?;
+        let color_value = ColorValue::try_from(
+            bytes
+                .get(color_value_start..)
+                .ok_or(ASEError::InputDataParseError)?,
+        )?;
 
         let color_type_start = color_value_start + color_value.calculate_length() as usize + 4;
-        let color_type = ColorType::try_from(&bytes[color_type_start + 1])?;
+        let color_type = ColorType::try_from(
+            bytes
+                .get(color_type_start + 1)
+                .ok_or(ASEError::InputDataParseError)?,
+        )?;
 
         Ok(Self::new(name, color_value, color_type))
     }
@@ -111,6 +126,63 @@ mod tests {
         assert_eq!(
             block,
             ColorBlock::parse(&[0, 1, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2]).unwrap()
+        );
+    }
+
+    #[test]
+    fn it_returns_error_on_empty_input() {
+        let parser_result = ColorBlock::parse(&[]);
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::InputDataParseError)),
+            "Only ASEError::InputDataParseError should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_error_on_length_larger_than_input() {
+        // try to parse more name bytes than available
+        let parser_result = ColorBlock::parse(&[12, 34]);
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::InputDataParseError)),
+            "Only ASEError::InputDataParseError should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_error_on_invalid_utf_16() {
+        // `[0xDC, 0x00]` is invalid utf16
+        let parser_result = ColorBlock::parse(&[0, 5, 0xDC, 0x00, 0, 97, 0, 109, 0, 101]);
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::UTF16Error)),
+            "Only ASEError::UTF16Error should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_error_on_missing_color_value() {
+        let parser_result = ColorBlock::parse(&[0, 1, 0, 0, 71]);
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::InputDataParseError)),
+            "Only ASEError::InputDataParseError should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_error_on_missing_color_type() {
+        let parser_result = ColorBlock::parse(&[0, 1, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0]);
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::InputDataParseError)),
+            "Only ASEError::InputDataParseError should be returned"
+        );
+    }
+
+    #[test]
+    fn it_returns_error_on_invalid_color_type() {
+        // `28` is not a valid color type, valid is only 0, 1 and 2
+        let parser_result = ColorBlock::parse(&[0, 1, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 28]);
+        assert!(
+            matches!(parser_result.err(), Some(ASEError::ColorTypeError)),
+            "Only ASEError::ColorTypeError should be returned"
         );
     }
 }

@@ -2,8 +2,7 @@
 #![deny(unsafe_code)]
 #![doc = include_str!("../README.md")]
 pub use error::{ASEError, ConformationError};
-use types::BlockType;
-use types::GroupHold;
+use types::{BlockType, GroupHold};
 pub use types::{ColorBlock, ColorType, ColorValue, Group};
 
 mod buffer;
@@ -113,7 +112,6 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         } else {
             safe_to_skip = true;
             skipped = 0;
-
             0
         };
 
@@ -124,17 +122,17 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         match block_type {
             BlockType::GroupStart => {
                 let block = Group::parse(&block)?;
-                if group_hold != types::GroupHold::Empty {
+                if group_hold != GroupHold::Empty {
                     return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
                 }
                 // if the parsed block has any sub-blocks then it has already been built
                 // and only a group-end block may follow it. Otherwise we are free to
                 // add colors as they appear until a group-end block is encountered.
                 group_hold = if block.blocks.is_empty() {
-                    types::GroupHold::HoldingBuilding
+                    GroupHold::HoldingBuilding
                 } else {
                     blocks_to_read += 1;
-                    types::GroupHold::HoldingBuilt
+                    GroupHold::HoldingBuilt
                 };
                 group_hold_value = block;
             }
@@ -151,9 +149,9 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
             BlockType::ColorEntry => {
                 let block = ColorBlock::parse(&block)?;
                 match group_hold {
-                    types::GroupHold::HoldingBuilding => group_hold_value.blocks.push(block),
-                    types::GroupHold::Empty => color_blocks.push(block),
-                    types::GroupHold::HoldingBuilt => {
+                    GroupHold::HoldingBuilding => group_hold_value.blocks.push(block),
+                    GroupHold::Empty => color_blocks.push(block),
+                    GroupHold::HoldingBuilt => {
                         return Err(ASEError::Invalid(error::ConformationError::GroupEnd))
                     }
                 }
@@ -351,6 +349,18 @@ mod tests {
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         let input_ase_bytes = create_ase(vec![group.clone()], vec![block.clone()]);
         let mut modified_ase_bytes = vec![0; 0];
+
+        // The following code modifies the generated ASE bytes so that
+        // the GroupEnd block is followed by a four byte zero length
+        // specifier. The slice lengths presented here are specific
+        // to the test and not general numbers.
+        // The layout, in this case, is:
+        //      bytes 0   - 127       GroupStart,ColorBlocks,GroupEnd
+        //      bytes 128 - end       Global Colors
+        // The modified data has the layout:
+        //      bytes 0   - 127       GroupStart,ColorBlocks,GroupEnd
+        //      bytes 128 - 131       u32(0)
+        //      bytes 132 - end       Global Colors
         modified_ase_bytes.extend_from_slice(&input_ase_bytes[..128]);
         modified_ase_bytes.extend_from_slice(&[0; 4]);
         modified_ase_bytes.extend_from_slice(&input_ase_bytes[128..]);
@@ -358,8 +368,111 @@ mod tests {
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, (vec![group], vec![block]));
-        assert_eq!(res.0.first().unwrap().name, "group name".to_owned());
-        assert_eq!(res.1.first().unwrap().name, "name".to_owned());
+    }
+
+    #[test]
+    fn it_reads_group_and_single_color_with_group_block_name_only_size() {
+        let group = Group::new(
+            "group name".to_owned(),
+            vec![
+                ColorBlock::new(
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
+                    ColorValue::Rgb(0.5, 0.3, 0.1),
+                    ColorType::Normal,
+                ),
+            ],
+        );
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
+        let input_ase_bytes = create_ase(vec![group.clone()], vec![block.clone()]);
+        let mut modified_ase_bytes = vec![0; 0];
+
+        // The following code modifies the generated ASE bytes so that
+        // the GroupStart block is sized to contain only the name
+        // of the group. This requires that the total number of blocks
+        // be updated to include the colors present in the group.
+        // The slice lengths presented here are specific
+        // to the test and not general numbers.
+        // The layout, in this case, is:
+        //      bytes 0   - 7         Header
+        //      bytes 8   - 11        2 expected blocks
+        //      bytes 12  - 13        GroupStart
+        //      bytes 14  - 17        Group block size 108
+        //      bytes 18  - end       Groups and Colors
+        // The modified data has the layout:
+        //      bytes 0   - 7         Header
+        //      bytes 8   - 11        5 expected blocks
+        //      bytes 12  - 13        GroupStart
+        //      bytes 14  - 17        Group block size 24
+        //      bytes 18  - end       Groups and Colors
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[..8]);
+        modified_ase_bytes.extend_from_slice(&(5_u32.to_be_bytes()));
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[12..14]);
+        modified_ase_bytes.extend_from_slice(&(24_u32.to_be_bytes()));
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[18..]);
+        let res = read_ase(&*modified_ase_bytes);
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res, (vec![group], vec![block]));
+    }
+
+    #[test]
+    fn it_reads_group_and_single_color_with_group_block_name_only_size_and_explicit_group_end_size()
+    {
+        let group = Group::new(
+            "group name".to_owned(),
+            vec![
+                ColorBlock::new(
+                    "light grey".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                ),
+                ColorBlock::new(
+                    "dark red".to_owned(),
+                    ColorValue::Rgb(0.5, 0.3, 0.1),
+                    ColorType::Normal,
+                ),
+            ],
+        );
+        let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
+        let input_ase_bytes = create_ase(vec![group.clone()], vec![block.clone()]);
+        let mut modified_ase_bytes = vec![0; 0];
+
+        // The following code modifies the generated ASE bytes so that
+        // the GroupStart block is sized to contain only the name
+        // of the group. This requires that the total number of blocks
+        // be updated to include the colors present in the group.
+        // The slice lengths presented here are specific
+        // to the test and not general numbers.
+        // The layout, in this case, is:
+        //      bytes 0   - 7         Header
+        //      bytes 8   - 11        2 expected blocks
+        //      bytes 12  - 13        GroupStart
+        //      bytes 14  - 17        Group block size 108
+        //      bytes 18  - end       Groups and Colors
+        // The modified data has the layout:
+        //      bytes 0   - 7         Header
+        //      bytes 8   - 11        5 expected blocks
+        //      bytes 12  - 13        GroupStart
+        //      bytes 14  - 17        Group block size 24
+        //      bytes 18  - 127       Groups and Sub Colors
+        //      bytes 128 - 131       u32(0)
+        //      bytes 132 - end       Global colors
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[..8]);
+        modified_ase_bytes.extend_from_slice(&(5_u32.to_be_bytes()));
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[12..14]);
+        modified_ase_bytes.extend_from_slice(&(24_u32.to_be_bytes()));
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[18..128]);
+        modified_ase_bytes.extend_from_slice(&[0; 4]);
+        modified_ase_bytes.extend_from_slice(&input_ase_bytes[128..]);
+        let res = read_ase(&*modified_ase_bytes);
+        assert!(res.is_ok());
+        let res = res.unwrap();
+        assert_eq!(res, (vec![group], vec![block]));
     }
 
     #[test]

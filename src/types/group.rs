@@ -2,13 +2,27 @@ use crate::{buffer::Buffer, error::ASEError};
 
 use super::{block_type::BlockType, ColorBlock};
 
-///Represents a named collection of colors
-#[derive(Debug, Clone, PartialEq)]
+/// Represents a named collection of colors
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct Group {
     /// The name of the group
     pub name: String,
     /// The colors in the group
     pub blocks: Vec<ColorBlock>,
+}
+
+/// An type to handle processing of files during parsing.
+///
+/// This is a workaround for groups with size values that
+/// do not include all color blocks.
+#[derive(Debug, PartialEq)]
+pub(crate) enum GroupHold {
+    /// Colors are being collected into a found parent group.
+    HoldingBuilding,
+    /// Colors were already collected by the Group::parse() function.
+    HoldingBuilt,
+    /// Colors are currently being collected in the global context.
+    Empty,
 }
 
 impl Group {

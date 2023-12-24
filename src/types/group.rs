@@ -114,7 +114,7 @@ impl Group {
             pointer += 4;
 
             let Ok(block) =
-                ColorBlock::parse(&bytes.get(pointer..).ok_or(ASEError::InputDataParseError)?)
+                ColorBlock::parse(bytes.get(pointer..).ok_or(ASEError::InputDataParseError)?)
             else {
                 break;
             };

@@ -70,7 +70,7 @@ impl TryFrom<&[u8]> for ColorValue {
                     <&[u8] as TryInto<[u8; 4]>>::try_into(data)
                         .map_err(|_| ASEError::InputDataParseError)
                 })
-                .and_then(|data| Ok(f32::from_be_bytes(data)))
+                .map(f32::from_be_bytes)
         };
 
         match &value.get(..4) {

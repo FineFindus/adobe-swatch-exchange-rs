@@ -1,0 +1,39 @@
+[package]
+name = "adobe-swatch-exchange-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.adobe-swatch-exchange]
+path = ".."
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[profile.release]
+debug = 1
+
+[[bin]]
+name = "read_ase"
+path = "fuzz_targets/read_ase.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "parse_group"
+path = "fuzz_targets/parse_group.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "parse_block"
+path = "fuzz_targets/parse_block.rs"
+test = false
+doc = false

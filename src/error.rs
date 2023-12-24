@@ -1,4 +1,3 @@
-use crate::ColorValue;
 use std::{array, fmt::Display, io, string};
 
 /// Indicates a failure in decoding the ASE.
@@ -17,7 +16,7 @@ pub enum ASEError {
     ColorFormat,
     /// An error occured due to Utf16 parsing issues.
     UTF16Error,
-    /// An error occured due to an invalid color type.
+    /// An error occured due to an invalid [ColorType](crate::types::ColorType).
     ColorTypeError,
     /// An error occured due to an invalid block type.
     BlockTypeError,

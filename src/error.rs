@@ -1,3 +1,4 @@
+use crate::ColorValue;
 use std::{array, fmt::Display, io, string};
 
 /// Indicates a failure in decoding the ASE.
@@ -11,7 +12,8 @@ pub enum ASEError {
     Invalid(ConformationError),
     /// An error occured due to an invalid color format.
     ///
-    /// Valid color formats are: CMYK, RGB, LAB, Gray.
+    /// Valid color formats are: [CMYK](ColorValue::Cmyk), [RGB](ColorValue::Rgb),
+    /// [Lab](ColorValue::Lab) and [Gray](ColorValue::Gray)
     ColorFormat,
     /// An error occured due to Utf16 parsing issues.
     UTF16Error,

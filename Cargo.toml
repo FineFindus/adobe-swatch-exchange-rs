@@ -1,6 +1,6 @@
 [package]
 name = "adobe-swatch-exchange"
-version = "2.0.1"
+version = "2.0.2"
 edition = "2021"
 rust-version = "1.65"
 readme = "README.md"
@@ -10,5 +10,3 @@ repository = "https://github.com/FineFindus/adobe-swatch-exchange-rs"
 keywords = ["ase", "adobe", "palette", "swatch"]
 categories = ["parser-implementations"]
 description = "Read and write .ase files"
-
-[dependencies]

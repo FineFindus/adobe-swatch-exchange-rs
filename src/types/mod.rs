@@ -16,4 +16,4 @@ pub(crate) use group::GroupHold;
 pub(crate) const FILE_SIGNATURE: &[u8; 4] = b"ASEF";
 
 /// Version of the ASE file.
-pub(crate) const VERSION: u32 = 0x00010000;
+pub(crate) const VERSION: u32 = 0x0001_0000;

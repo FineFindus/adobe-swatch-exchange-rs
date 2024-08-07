@@ -18,8 +18,8 @@ impl ColorBlock {
     pub fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
         Self {
             name,
-            color_type,
             color,
+            color_type,
         }
     }
 

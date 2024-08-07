@@ -104,15 +104,15 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         // block length for GroupEnd blocks should always be zero, the `skipped`
         // variable above is intended to help us avoid the issue where the size
         // is specified.
-        let block_length = if block_type != BlockType::GroupEnd {
+        let block_length = if block_type == BlockType::GroupEnd {
+            safe_to_skip = true;
+            skipped = 0;
+            0
+        } else {
             ase.read_exact(&mut buf_u32)?;
             let block_length = u32::from_be_bytes(buf_u32);
             safe_to_skip = false;
             block_length
-        } else {
-            safe_to_skip = true;
-            skipped = 0;
-            0
         };
 
         let mut block = vec![0; block_length as usize];

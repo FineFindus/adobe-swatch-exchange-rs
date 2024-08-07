@@ -19,7 +19,7 @@ pub struct Group {
 pub(crate) enum GroupHold {
     /// Colors are being collected into a found parent group.
     HoldingBuilding,
-    /// Colors were already collected by the Group::parse() function.
+    /// Colors were already collected by the `Group::parse()` function.
     HoldingBuilt,
     /// Colors are currently being collected in the global context.
     Empty,

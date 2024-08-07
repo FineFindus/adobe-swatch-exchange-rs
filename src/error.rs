@@ -11,12 +11,12 @@ pub enum ASEError {
     Invalid(ConformationError),
     /// An error occured due to an invalid color format.
     ///
-    /// Valid color formats are: [CMYK](ColorValue::Cmyk), [RGB](ColorValue::Rgb),
-    /// [Lab](ColorValue::Lab) and [Gray](ColorValue::Gray)
+    /// Valid color formats are: [`CMYK`](crate::types::ColorValue::Cmyk), [`RGB`](crate::types::ColorValue::Rgb),
+    /// [`Lab`](crate::types::ColorValue::Lab) and [`Gray`](crate::types::ColorValue::Gray)
     ColorFormat,
-    /// An error occured due to Utf16 parsing issues.
+    /// An error occured due to UTF16 parsing issues.
     UTF16Error,
-    /// An error occured due to an invalid [ColorType](crate::types::ColorType).
+    /// An error occured due to an invalid [`ColorType`](crate::types::ColorType).
     ColorTypeError,
     /// An error occured due to an invalid block type.
     BlockTypeError,
@@ -35,7 +35,7 @@ pub enum ConformationError {
     ///
     /// The file signature must be `ASEF`.
     FileSignature,
-    /// Groups must be terminated with a GroupEnd block.
+    /// Groups must be terminated with a `GroupEnd` block.
     GroupEnd,
 }
 

@@ -14,7 +14,7 @@ pub struct ColorBlock {
 }
 
 impl ColorBlock {
-    /// Creates a new ColorBlock with the given name, color type and color.
+    /// Creates a new `ColorBlock` with the given name, color type and color.
     pub fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
         Self {
             name,

@@ -37,7 +37,8 @@ impl ColorValue {
                 buf.write_f32(b);
             }
             ColorValue::Lab(l, a, b) => {
-                buf.write_f32(l);
+                // ASE stores L* scaled to [0, 1]
+                buf.write_f32(l / 100.0);
                 buf.write_f32(a);
                 buf.write_f32(b);
             }
@@ -88,7 +89,8 @@ impl TryFrom<&[u8]> for ColorValue {
                 Ok(ColorValue::Rgb(red, green, blue))
             }
             Some(b"LAB ") => {
-                let l = f32_from_bytes(4..8)?;
+                // scale L* to be in [0, 100]
+                let l = f32_from_bytes(4..8)? * 100.0;
                 let a = f32_from_bytes(8..12)?;
                 let b = f32_from_bytes(12..16)?;
                 Ok(ColorValue::Lab(l, a, b))
@@ -128,13 +130,13 @@ mod tests {
 
     #[test]
     fn it_parses_lab() {
-        let rgb = ColorValue::Lab(52.582_397, 38.506_775, 12.420_94);
+        let color = ColorValue::Lab(0.525_823_97, 38.506_775, 12.420_94);
         let mut buffer = Buffer::with_capacity(20);
-        buffer.write_slice(rgb.get_type());
-        rgb.clone().write_values(&mut buffer);
+        buffer.write_slice(color.get_type());
+        color.clone().write_values(&mut buffer);
         let res = ColorValue::try_from(buffer.into_vec().as_slice());
         assert!(res.is_ok());
-        assert_eq!(rgb, res.unwrap());
+        assert_eq!(color, res.unwrap());
     }
 
     #[test]

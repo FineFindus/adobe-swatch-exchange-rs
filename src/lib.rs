@@ -23,8 +23,8 @@ mod types;
 /// # assert_eq!( ase, vec![65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 22, 0, 5, 0, 110, 0, 97, 0, 109, 0, 101, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2]);
 /// ```
 pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
-    let group_size: u32 = groups.iter().map(|group| group.calculate_length()).sum();
-    let color_size: u32 = colors.iter().map(|color| color.calculate_length()).sum();
+    let group_size: u32 = groups.iter().map(Group::calculate_length).sum();
+    let color_size: u32 = colors.iter().map(ColorBlock::calculate_length).sum();
     // we slightly over-estimate the required amount of space here, to avoid a costly resizing
     let mut buf = buffer::Buffer::with_capacity((8 + group_size * 2 + color_size) as usize);
 

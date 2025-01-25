@@ -36,11 +36,11 @@ impl Group {
         buf.write_u16(BlockType::GroupStart as u16);
         buf.write_u32(self.calculate_length());
 
-        //name length, +1 for null terminator
+        // name length, +1 for null terminator
         buf.write_u16(self.name.len() as u16 + 1);
         buf.write_null_terminated_utf_16_str(&self.name);
 
-        //write colors
+        // write colors
         self.blocks.into_iter().for_each(|block| block.write(buf));
 
         buf.write_u16(BlockType::GroupEnd as u16);
@@ -79,7 +79,7 @@ impl Group {
                 .ok_or(ASEError::InputDataParseError)?
                 .try_into()?,
         );
-        //read name bytes, but stop before not byte
+        // read name bytes, but stop before not byte
         let name_bytes: Vec<u16> = bytes
             .get(2..(name_length as usize * 2))
             .ok_or(ASEError::InputDataParseError)?
@@ -336,7 +336,7 @@ mod tests {
     #[test]
     fn it_returns_error_on_invalid_block_length() {
         let parser_result = Group::parse(&[
-            //has block length of `34`, replacing it with invalid length of 13
+            // has block length of `34`, replacing it with invalid length of 13
             0, 1, 0, 0, 0, 1, 0, 0, 0, 13, 0, 11, 0, 108, 0, 105, 0, 103, 0, 104, 0, 116, 0, 32, 0,
             103, 0, 114, 0, 101, 0, 121, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0,
             38, 0, 9, 0, 100, 0, 97, 0, 114, 0, 107, 0, 32, 0, 114, 0, 101, 0, 100, 0, 0, 82, 71,
@@ -360,7 +360,7 @@ mod tests {
             )],
         );
         let parser_result = Group::parse(&[
-            //has block length of `34`, replacing it with invalid length of 130
+            // has block length of `34`, replacing it with invalid length of 130
             0, 1, 0, 0, 0, 1, 0, 0, 0, 130, 0, 11, 0, 108, 0, 105, 0, 103, 0, 104, 0, 116, 0, 32, 0,
             103, 0, 114, 0, 101, 0, 121, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0,
             38, 0, 9, 0, 100, 0, 97, 0, 114, 0, 107, 0, 32, 0, 114, 0, 101, 0, 100, 0, 0, 82, 71,

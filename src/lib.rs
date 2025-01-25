@@ -28,16 +28,16 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
     // we slightly over-estimate the required amount of space here, to avoid a costly resizing
     let mut buf = buffer::Buffer::with_capacity((8 + group_size * 2 + color_size) as usize);
 
-    //file metadata
+    // file metadata
     buf.write_slice(types::FILE_SIGNATURE);
     buf.write_u32(types::VERSION);
-    //number of blocks
+    // number of blocks
     buf.write_u32((groups.len() + colors.len()) as u32);
 
-    //write groups
+    // write groups
     groups.into_iter().for_each(|group| group.write(&mut buf));
 
-    //write single colors
+    // write single colors
     colors.into_iter().for_each(|block| block.write(&mut buf));
 
     buf.into_vec()
@@ -53,7 +53,7 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
 /// # Examples
 /// ```rust
 /// # use adobe_swatch_exchange::read_ase;
-/// //any source
+/// // any source
 /// let source = vec![65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 0, 0];
 /// let (groups, colors) = read_ase(&*source).unwrap();
 /// # assert_eq!((groups, colors), (vec![], vec![]));
@@ -61,13 +61,13 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
 pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBlock>), ASEError> {
     let mut buf_u32 = [0; 4];
 
-    //read magic bytes
+    // read magic bytes
     ase.read_exact(&mut buf_u32)?;
     if &buf_u32 != types::FILE_SIGNATURE {
         return Err(ASEError::Invalid(error::ConformationError::FileSignature));
     }
 
-    //read version,should be 1.0
+    // read version, should be 1.0
     ase.read_exact(&mut buf_u32)?;
     if buf_u32 != types::VERSION.to_be_bytes() {
         return Err(ASEError::Invalid(error::ConformationError::FileVersion));
@@ -80,20 +80,20 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
     let mut color_blocks = Vec::new();
     let mut buf_u16 = [0; 2];
 
-    //temporary group to handle nonconformant group blocks
+    // temporary group to handle nonconformant group blocks
     let mut group_hold = GroupHold::Empty;
     let mut group_hold_value = Group::default();
 
     let mut blocks_to_read = number_of_blocks;
 
-    //allow skipping of empty blocks when a group-end block has a size field
+    // allow skipping of empty blocks when a group-end block has a size field
     let mut skipped = 0;
     let mut safe_to_skip = false;
 
     while blocks_to_read > 0 {
         ase.read_exact(&mut buf_u16)?;
 
-        // Only skip if the next two bytes were zero and we haven't skipped two already.
+        // only skip if the next two bytes were zero and we haven't skipped two already.
         if buf_u16 == [0, 0] && skipped < 2 && safe_to_skip {
             skipped += 1;
             continue;
@@ -122,7 +122,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
         let mut block = vec![0; block_length as usize];
         ase.read_exact(&mut block)?;
 
-        //parse block data and add it appropriate vec
+        // parse block data and add it appropriate vec
         match block_type {
             BlockType::GroupStart => {
                 let block = Group::parse(&block)?;
@@ -140,7 +140,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                 };
                 group_hold_value = block;
             }
-            //read by the group end
+            // read by the group end
             BlockType::GroupEnd => match group_hold {
                 GroupHold::HoldingBuilding | GroupHold::HoldingBuilt => {
                     groups.push(group_hold_value.clone());

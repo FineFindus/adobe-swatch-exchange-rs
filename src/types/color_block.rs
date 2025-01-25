@@ -27,11 +27,11 @@ impl ColorBlock {
     pub(crate) fn write(self, buf: &mut Buffer) {
         buf.write_u16(BlockType::ColorEntry as u16);
         buf.write_u32(self.calculate_length());
-        //name length, +1 for null terminator
+        // name length, +1 for null terminator
         buf.write_u16(self.name.len() as u16 + 1);
         buf.write_null_terminated_utf_16_str(&self.name);
 
-        //write color
+        // write color
         buf.write_slice(self.color.get_type());
         self.color.write_values(buf);
         buf.write_u16(self.color_type as u16);
@@ -60,7 +60,7 @@ impl ColorBlock {
                 .ok_or(ASEError::InputDataParseError)?
                 .try_into()?,
         );
-        //read name bytes, but stop before null byte
+        // read name bytes, but stop before null byte
         let name_bytes: Vec<u16> = bytes
             .get(2..(name_length as usize * 2))
             .ok_or(ASEError::InputDataParseError)?

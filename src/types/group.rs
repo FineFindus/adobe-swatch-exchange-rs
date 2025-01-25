@@ -49,8 +49,10 @@ impl Group {
     /// Calculate the length of an group.
     ///
     /// The length is calculate the following way:
-    /// name length (2) + name (* 2, UTF 16) + null terminator (2)
-    /// + color entry type (2) + color entry length
+    ///  - name length (2)
+    ///  - name * 2 (UTF 16) + null terminator (2)
+    ///  - color entry type (2)
+    ///  - color entry length
     pub(crate) fn calculate_length(&self) -> u32 {
         2 + self.name.len() as u32 * 2
             + 2

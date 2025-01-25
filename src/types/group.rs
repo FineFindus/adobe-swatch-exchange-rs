@@ -27,6 +27,22 @@ pub(crate) enum GroupHold {
 
 impl Group {
     /// Creates a new group of colors, grouped together with the specified name.
+    ///
+    /// # Examples
+    /// ```rust
+    /// # use adobe_swatch_exchange::ColorBlock;
+    /// # use adobe_swatch_exchange::ColorValue;
+    /// # use adobe_swatch_exchange::ColorType;
+    /// # use adobe_swatch_exchange::Group;
+    /// let group = Group::new(
+    ///     "Accents".to_owned(),
+    ///     vec![ColorBlock::new(
+    ///         "Blue".to_owned(),
+    ///         ColorValue::Rgb(0.20784313725490197, 0.5176470588235295, 0.8941176470588236),
+    ///         ColorType::Normal,
+    ///     )],
+    /// );
+    /// # assert_eq!(group.name, "Accents".to_owned());
     pub fn new(name: String, blocks: Vec<ColorBlock>) -> Self {
         Self { name, blocks }
     }

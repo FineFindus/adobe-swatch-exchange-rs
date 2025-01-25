@@ -15,6 +15,18 @@ pub struct ColorBlock {
 
 impl ColorBlock {
     /// Creates a new `ColorBlock` with the given name, color type and color.
+    ///
+    /// ```rust
+    /// # use adobe_swatch_exchange::ColorBlock;
+    /// # use adobe_swatch_exchange::ColorValue;
+    /// # use adobe_swatch_exchange::ColorType;
+    /// # use adobe_swatch_exchange::Group;
+    /// let block = ColorBlock::new(
+    ///     "Blue".to_owned(),
+    ///     ColorValue::Rgb(0.20784313725490197, 0.5176470588235295, 0.8941176470588236),
+    ///     ColorType::Normal,
+    /// );
+    /// # assert_eq!(block.name, "Blue".to_owned());
     pub fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
         Self {
             name,

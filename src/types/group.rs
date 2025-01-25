@@ -51,7 +51,7 @@ impl Group {
     /// The length is calculate the following way:
     /// name length (2) + name (* 2, UTF 16) + null terminator (2)
     /// + color entry type (2) + color entry length
-    pub(super) fn calculate_length(&self) -> u32 {
+    pub(crate) fn calculate_length(&self) -> u32 {
         2 + self.name.len() as u32 * 2
             + 2
             + self

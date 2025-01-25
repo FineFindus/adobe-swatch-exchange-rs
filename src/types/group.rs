@@ -59,6 +59,7 @@ impl Group {
             + self
                 .blocks
                 .iter()
+                // add bytes for block type (2) and block length (4)
                 .map(|block| block.calculate_length() + 2 + 4)
                 .sum::<u32>()
     }

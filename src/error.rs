@@ -9,22 +9,22 @@ pub enum ASEError {
     ///
     /// This means that the input data did not conform to the ASE specification.
     Invalid(ConformationError),
-    /// An error occured due to an invalid color format.
+    /// An error occurred due to an invalid color format.
     ///
     /// Valid color formats are: [`CMYK`](crate::types::ColorValue::Cmyk), [`RGB`](crate::types::ColorValue::Rgb),
     /// [`Lab`](crate::types::ColorValue::Lab) and [`Gray`](crate::types::ColorValue::Gray)
     ColorFormat,
-    /// An error occured due to UTF16 parsing issues.
+    /// An error occurred due to UTF-16 parsing issues.
     UTF16Error,
-    /// An error occured due to an invalid [`ColorType`](crate::types::ColorType).
+    /// An error occurred due to an invalid [`ColorType`](crate::types::ColorType).
     ColorTypeError,
-    /// An error occured due to an invalid block type.
+    /// An error occurred due to an invalid block type.
     BlockTypeError,
-    /// An error occured while parsing the input data.
+    /// An error occurred while parsing the input data.
     InputDataParseError,
 }
 
-/// Indicates the cause of the file being an invalid ase.
+/// Indicates the cause of the file being an invalid ASE.
 #[derive(Debug)]
 pub enum ConformationError {
     /// An invalid file version was detected.

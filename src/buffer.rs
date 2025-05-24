@@ -35,7 +35,7 @@ impl Buffer {
         self.write_slice(&n.to_be_bytes());
     }
 
-    /// Write a null terminated UTF16 String to self.
+    /// Write a null terminated UTF-16 String to self.
     pub fn write_null_terminated_utf_16_str(&mut self, src: &str) {
         src.encode_utf16().for_each(|byte| self.write_u16(byte));
         self.write_u16(0);

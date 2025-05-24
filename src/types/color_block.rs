@@ -49,7 +49,7 @@ impl ColorBlock {
         buf.write_u16(self.color_type as u16);
     }
 
-    /// Calculate the length of an color block.
+    /// Calculate the length of a color block.
     ///
     /// The length is calculate the from the following layout:
     ///  - name length (2)
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn it_returns_error_on_invalid_utf_16() {
-        // `[0xDC, 0x00]` is invalid utf16
+        // `[0xDC, 0x00]` is invalid UTF-16
         let parser_result = ColorBlock::parse(&[0, 5, 0xDC, 0x00, 0, 97, 0, 109, 0, 101]);
         assert!(
             matches!(parser_result.err(), Some(ASEError::UTF16Error)),

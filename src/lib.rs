@@ -43,7 +43,7 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
     buf.into_vec()
 }
 
-/// Read groups and single colors from the .ase file.
+/// Read groups and single colors from the `.ase` file.
 ///
 /// # Errors
 ///
@@ -80,7 +80,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
     let mut color_blocks = Vec::new();
     let mut buf_u16 = [0; 2];
 
-    // temporary group to handle nonconformant group blocks
+    // temporary group to handle nonconforming group blocks
     let mut group_hold = GroupHold::Empty;
     let mut group_hold_value = Group::default();
 
@@ -359,10 +359,10 @@ mod tests {
         // specifier. The slice lengths presented here are specific
         // to the test and not general numbers.
         // The layout, in this case, is:
-        //      bytes 0   - 127       GroupStart,ColorBlocks,GroupEnd
+        //      bytes 0   - 127       GroupStart, ColorBlocks, GroupEnd
         //      bytes 128 - end       Global Colors
         // The modified data has the layout:
-        //      bytes 0   - 127       GroupStart,ColorBlocks,GroupEnd
+        //      bytes 0   - 127       GroupStart, ColorBlocks, GroupEnd
         //      bytes 128 - 131       u32(0)
         //      bytes 132 - end       Global Colors
         modified_ase_bytes.extend_from_slice(&input_ase_bytes[..128]);

@@ -11,7 +11,7 @@ pub struct Group {
     pub blocks: Vec<ColorBlock>,
 }
 
-/// An type to handle processing of files during parsing.
+/// A type to handle processing of files during parsing.
 ///
 /// This is a workaround for groups with size values that
 /// do not include all color blocks.
@@ -62,7 +62,7 @@ impl Group {
         buf.write_u16(BlockType::GroupEnd as u16);
     }
 
-    /// Calculate the length of an group.
+    /// Calculate the length of a group.
     ///
     /// The length is calculate the following way:
     ///  - name length (2)
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn it_returns_error_on_invalid_utf_16() {
-        // `[0xDC, 0x00]` is invalid utf16
+        // `[0xDC, 0x00]` is invalid UTF-16
         let parser_result = Group::parse(&[0, 5, 0xDC, 0x00, 0, 97, 0, 109, 0, 101]);
         assert!(
             matches!(parser_result.err(), Some(ASEError::UTF16Error)),

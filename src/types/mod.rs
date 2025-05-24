@@ -11,7 +11,8 @@ pub use color_value::ColorValue;
 pub use group::Group;
 pub(crate) use group::GroupHold;
 
-/// Magic Bytes for .ase files.
+/// Magic Bytes for `.ase` files.
+///
 /// Equal to the bytes of `ASEF`.
 pub(crate) const FILE_SIGNATURE: &[u8; 4] = b"ASEF";
 

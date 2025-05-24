@@ -160,7 +160,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                     }
                 }
             }
-        };
+        }
 
         blocks_to_read -= 1;
     }

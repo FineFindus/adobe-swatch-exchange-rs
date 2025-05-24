@@ -15,27 +15,27 @@ impl Buffer {
         }
     }
 
-    /// Write the slice to self.
+    /// Write the slice to [self].
     pub fn write_slice(&mut self, src: &[u8]) {
         self.data.extend_from_slice(src);
     }
 
-    /// Write [u32] to self.
+    /// Write [u32] to [self].
     pub fn write_u32(&mut self, n: u32) {
         self.write_slice(&n.to_be_bytes());
     }
 
-    /// Write [f32] to self.
+    /// Write [f32] to [self].
     pub fn write_f32(&mut self, n: f32) {
         self.write_slice(&n.to_be_bytes());
     }
 
-    /// Write [u16] to self.
+    /// Write [u16] to [self].
     pub fn write_u16(&mut self, n: u16) {
         self.write_slice(&n.to_be_bytes());
     }
 
-    /// Write a null terminated UTF-16 String to self.
+    /// Write a null terminated UTF-16 String to [self].
     pub fn write_null_terminated_utf_16_str(&mut self, src: &str) {
         src.encode_utf16().for_each(|byte| self.write_u16(byte));
         self.write_u16(0);

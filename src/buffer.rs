@@ -1,4 +1,4 @@
-/// Represents an infinite buffer designed to hold individual bytes (`u8`).
+/// Represents an infinite buffer designed to hold individual bytes ([`u8`]).
 ///
 /// It provides methods for easily writing other data types
 /// as bytes. All bytes are written in big-endian byte order.
@@ -20,17 +20,17 @@ impl Buffer {
         self.data.extend_from_slice(src);
     }
 
-    /// Write u32 to self.
+    /// Write [u32] to self.
     pub fn write_u32(&mut self, n: u32) {
         self.write_slice(&n.to_be_bytes());
     }
 
-    /// Write f32 to self.
+    /// Write [f32] to self.
     pub fn write_f32(&mut self, n: f32) {
         self.write_slice(&n.to_be_bytes());
     }
 
-    /// Write u16 to self.
+    /// Write [u16] to self.
     pub fn write_u16(&mut self, n: u16) {
         self.write_slice(&n.to_be_bytes());
     }

@@ -35,10 +35,14 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
     buf.write_u32((groups.len() + colors.len()) as u32);
 
     // write groups
-    groups.into_iter().for_each(|group| group.write(&mut buf));
+    for group in groups {
+        group.write(&mut buf);
+    }
 
     // write single colors
-    colors.into_iter().for_each(|block| block.write(&mut buf));
+    for block in colors {
+        block.write(&mut buf);
+    }
 
     buf.into_vec()
 }

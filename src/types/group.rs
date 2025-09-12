@@ -57,7 +57,9 @@ impl Group {
         buf.write_null_terminated_utf_16_str(&self.name);
 
         // write colors
-        self.blocks.into_iter().for_each(|block| block.write(buf));
+        for block in self.blocks {
+            block.write(buf);
+        }
 
         buf.write_u16(BlockType::GroupEnd as u16);
     }

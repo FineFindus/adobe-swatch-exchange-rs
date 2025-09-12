@@ -2,7 +2,6 @@
 ///
 /// It provides methods for easily writing other data types
 /// as bytes. All bytes are written in big-endian byte order.
-#[derive(Debug, Clone)]
 pub(crate) struct Buffer {
     data: Vec<u8>,
 }

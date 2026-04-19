@@ -22,7 +22,7 @@ mod types;
 pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
     let group_size: u32 = groups.iter().map(Group::calculate_length).sum();
     let color_size: u32 = colors.iter().map(ColorBlock::calculate_length).sum();
-    // we slightly over-estimate the required amount of space here, to avoid a costly resizing
+    // we slightly overestimate the required amount of space here, to avoid a costly resizing
     let mut buf = buffer::Buffer::with_capacity((8 + group_size * 2 + color_size) as usize);
 
     // file metadata

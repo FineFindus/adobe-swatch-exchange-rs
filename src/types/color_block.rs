@@ -1,6 +1,6 @@
 use crate::{buffer::Buffer, error::ASEError};
 
-use super::{block_type::BlockType, ColorType, ColorValue};
+use super::{ColorType, ColorValue, block_type::BlockType};
 
 /// A single color with an associated name.
 #[derive(Debug, Clone, PartialEq)]

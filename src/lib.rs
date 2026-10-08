@@ -148,7 +148,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                     group_hold = GroupHold::Empty;
                 }
                 GroupHold::Empty => {
-                    return Err(ASEError::Invalid(error::ConformationError::GroupEnd))
+                    return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
                 }
             },
             BlockType::ColorEntry => {
@@ -157,7 +157,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                     GroupHold::HoldingBuilding => group_hold_value.blocks.push(block),
                     GroupHold::Empty => color_blocks.push(block),
                     GroupHold::HoldingBuilt => {
-                        return Err(ASEError::Invalid(error::ConformationError::GroupEnd))
+                        return Err(ASEError::Invalid(error::ConformationError::GroupEnd));
                     }
                 }
             }

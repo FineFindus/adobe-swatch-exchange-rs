@@ -1,6 +1,6 @@
 use crate::{buffer::Buffer, error::ASEError};
 
-use super::{block_type::BlockType, ColorBlock};
+use super::{ColorBlock, block_type::BlockType};
 
 /// Represents a named collection of colors
 #[derive(Debug, Clone, PartialEq, Default)]

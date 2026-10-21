@@ -136,7 +136,10 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
                 group_hold = if block.blocks.is_empty() {
                     GroupHold::HoldingBuilding
                 } else {
-                    blocks_to_read += 1;
+                    blocks_to_read = blocks_to_read
+                        .checked_add(1)
+                        .ok_or(ASEError::InputDataParseError)?;
+
                     GroupHold::HoldingBuilt
                 };
                 group_hold_value = block;
@@ -588,6 +591,25 @@ mod tests {
                 Some(ASEError::Invalid(ConformationError::GroupEnd))
             ),
             "Only ASEError::Invalid(error::ConformationError::GroupEnd) should be returned"
+        );
+    }
+
+    #[test]
+    fn handle_groups_overflow() {
+        assert!(
+            read_ase(&*vec![
+                65, 83, 69, 70, 0, 1, 0, 0, 255, 255, 255, 255, 192, 1, 0, 0, 0, 172, 0, 21, 2, 0,
+                76, 76, 76, 76, 0, 1, 1, 0, 1, 0, 0, 1, 0, 51, 0, 0, 65, 219, 84, 85, 85, 85, 85,
+                85, 85, 5, 0, 76, 65, 83, 69, 70, 0, 1, 0, 0, 65, 83, 69, 94, 0, 1, 0, 0, 0, 37, 0,
+                1, 0, 0, 67, 77, 89, 75, 15, 2, 250, 0, 0, 0, 0, 0, 0, 0, 67, 0, 67, 8, 0, 54, 4,
+                0, 65, 75, 76, 76, 76, 0, 1, 1, 0, 1, 0, 0, 1, 0, 51, 0, 0, 65, 219, 84, 85, 175,
+                69, 70, 0, 0, 0, 0, 0, 0, 0, 67, 128, 65, 83, 69, 70, 0, 1, 65, 83, 69, 70, 0, 1,
+                0, 0, 65, 83, 69, 94, 5, 0, 76, 65, 83, 69, 70, 0, 1, 0, 0, 0, 0, 37, 0, 1, 0, 0,
+                250, 0, 0, 0, 0, 0, 0, 0, 75, 76, 76, 76, 0, 1, 1, 0, 1, 0, 0, 1, 0, 51, 0, 0, 0,
+                0, 0,
+            ])
+            .is_err(),
+            "Parser result must be an invalid data error due to the overflow."
         );
     }
 }

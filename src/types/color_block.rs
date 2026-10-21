@@ -27,7 +27,7 @@ impl ColorBlock {
     ///     ColorType::Normal,
     /// );
     /// # assert_eq!(block.name, "Blue".to_owned());
-    pub fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
+    pub const fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
         Self {
             name,
             color,
@@ -57,7 +57,7 @@ impl ColorBlock {
     ///  - color type (4)
     ///  - color value (1/3/4)
     ///  - type (2)
-    pub(crate) fn calculate_length(&self) -> u32 {
+    pub(crate) const fn calculate_length(&self) -> u32 {
         2 + self.name.len() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
     }
 

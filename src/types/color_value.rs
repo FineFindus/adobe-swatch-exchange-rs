@@ -13,7 +13,7 @@ pub enum ColorValue {
 
 impl ColorValue {
     /// Returns the color type identifier
-    pub(super) fn get_type(&self) -> &[u8] {
+    pub(super) const fn get_type(&self) -> &[u8] {
         match self {
             ColorValue::Cmyk(_, _, _, _) => b"CMYK",
             ColorValue::Rgb(_, _, _) => b"RGB ",
@@ -50,7 +50,7 @@ impl ColorValue {
     ///
     /// The length is based on the number of f32, times 4,
     /// as each one requires 4 bytes.
-    pub(super) fn calculate_length(&self) -> u32 {
+    pub(super) const fn calculate_length(&self) -> u32 {
         match self {
             ColorValue::Cmyk(_, _, _, _) => 16,
             ColorValue::Rgb(_, _, _) | ColorValue::Lab(_, _, _) => 12,

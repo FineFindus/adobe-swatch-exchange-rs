@@ -43,7 +43,7 @@ impl Group {
     ///     )],
     /// );
     /// # assert_eq!(group.name, "Accents".to_owned());
-    pub fn new(name: String, blocks: Vec<ColorBlock>) -> Self {
+    pub const fn new(name: String, blocks: Vec<ColorBlock>) -> Self {
         Self { name, blocks }
     }
 

@@ -1,4 +1,3 @@
-#![allow(unused)]
 use adobe_swatch_exchange::{ColorBlock, ColorType, ColorValue, Group};
 
 fn main() -> Result<(), std::io::Error> {
@@ -32,6 +31,7 @@ fn main() -> Result<(), std::io::Error> {
             ),
         ],
     );
+
     let ase = adobe_swatch_exchange::create_ase(vec![group], vec![]);
     std::fs::write("examples/aurora.ase", ase)
 }

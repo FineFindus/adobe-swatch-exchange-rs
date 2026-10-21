@@ -372,7 +372,7 @@ mod tests {
         modified_ase_bytes.extend_from_slice(&input_ase_bytes[..128]);
         modified_ase_bytes.extend_from_slice(&[0; 4]);
         modified_ase_bytes.extend_from_slice(&input_ase_bytes[128..]);
-        let res = read_ase(&*input_ase_bytes);
+        let res = read_ase(&*modified_ase_bytes);
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, (vec![group], vec![block]));

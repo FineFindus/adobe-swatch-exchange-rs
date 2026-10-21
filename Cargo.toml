@@ -5,7 +5,6 @@ edition = "2024"
 rust-version = "1.85"
 readme = "README.md"
 license = "MPL-2.0"
-homepage = "https://github.com/FineFindus/adobe-swatch-exchange-rs"
 repository = "https://github.com/FineFindus/adobe-swatch-exchange-rs"
 keywords = ["ase", "adobe", "palette", "swatch"]
 categories = ["parser-implementations"]

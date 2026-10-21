@@ -71,17 +71,18 @@ impl ColorBlock {
                 .get(0..2)
                 .ok_or(ASEError::InputDataParseError)?
                 .try_into()?,
-        );
+        ) as usize;
+
         // read name bytes, but stop before null byte
         let name_bytes: Vec<u16> = bytes
-            .get(2..(name_length as usize * 2))
+            .get(2..(name_length * 2))
             .ok_or(ASEError::InputDataParseError)?
             .chunks_exact(2)
             .map(|bytes| u16::from_be_bytes(bytes.try_into().unwrap()))
             .collect();
         let name = String::from_utf16(&name_bytes)?;
 
-        let color_value_start = name_length as usize * 2 + 2;
+        let color_value_start = (name_length + 1) * 2;
         let color_value = ColorValue::try_from(
             bytes
                 .get(color_value_start..)

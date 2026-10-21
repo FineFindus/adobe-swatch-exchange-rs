@@ -1,7 +1,9 @@
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let ase_file = std::fs::read("examples/aurora.ase")?;
-    let (groups, colors) = adobe_swatch_exchange::read_ase(&*ase_file)?;
+    let file = std::fs::File::open("examples/aurora.ase")?;
+
+    let (groups, colors) = adobe_swatch_exchange::read_ase(file)?;
     println!("Groups: {:?}", groups);
     println!("Colors: {:?}", colors);
+
     Ok(())
 }

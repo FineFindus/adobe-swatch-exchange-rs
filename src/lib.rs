@@ -184,7 +184,7 @@ pub fn read_ase<T: std::io::Read>(mut ase: T) -> Result<(Vec<Group>, Vec<ColorBl
 
 #[cfg(test)]
 mod tests {
-    use crate::error::ConformationError;
+    use crate::{buffer::Buffer, error::ConformationError};
 
     use super::*;
 
@@ -356,7 +356,7 @@ mod tests {
         );
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         let input_ase_bytes = create_ase(vec![group.clone()], vec![block.clone()]);
-        let mut modified_ase_bytes = vec![0; 0];
+        let mut modified_ase_bytes = Buffer::with_capacity(256);
 
         // The following code modifies the generated ASE bytes so that
         // the GroupEnd block is followed by a four byte zero length
@@ -369,10 +369,10 @@ mod tests {
         //      bytes 0   - 127       GroupStart, ColorBlocks, GroupEnd
         //      bytes 128 - 131       u32(0)
         //      bytes 132 - end       Global Colors
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[..128]);
-        modified_ase_bytes.extend_from_slice(&[0; 4]);
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[128..]);
-        let res = read_ase(&*modified_ase_bytes);
+        modified_ase_bytes.write_slice(&input_ase_bytes[..128]);
+        modified_ase_bytes.write_slice(&[0; 4]);
+        modified_ase_bytes.write_slice(&input_ase_bytes[128..]);
+        let res = read_ase(&*modified_ase_bytes.into_vec());
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, (vec![group], vec![block]));
@@ -397,7 +397,7 @@ mod tests {
         );
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         let input_ase_bytes = create_ase(vec![group.clone()], vec![block.clone()]);
-        let mut modified_ase_bytes = vec![0; 0];
+        let mut modified_ase_bytes = Buffer::with_capacity(256);
 
         // The following code modifies the generated ASE bytes so that
         // the GroupStart block is sized to contain only the name
@@ -417,12 +417,12 @@ mod tests {
         //      bytes 12  - 13        GroupStart
         //      bytes 14  - 17        Group block size 24
         //      bytes 18  - end       Groups and Colors
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[..8]);
-        modified_ase_bytes.extend_from_slice(&(5_u32.to_be_bytes()));
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[12..14]);
-        modified_ase_bytes.extend_from_slice(&(24_u32.to_be_bytes()));
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[18..]);
-        let res = read_ase(&*modified_ase_bytes);
+        modified_ase_bytes.write_slice(&input_ase_bytes[..8]);
+        modified_ase_bytes.write_u32(5_u32);
+        modified_ase_bytes.write_slice(&input_ase_bytes[12..14]);
+        modified_ase_bytes.write_u32(24_u32);
+        modified_ase_bytes.write_slice(&input_ase_bytes[18..]);
+        let res = read_ase(&*modified_ase_bytes.into_vec());
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, (vec![group], vec![block]));
@@ -448,7 +448,7 @@ mod tests {
         );
         let block = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
         let input_ase_bytes = create_ase(vec![group.clone()], vec![block.clone()]);
-        let mut modified_ase_bytes = vec![0; 0];
+        let mut modified_ase_bytes = Buffer::with_capacity(256);
 
         // The following code modifies the generated ASE bytes so that
         // the GroupStart block is sized to contain only the name
@@ -470,14 +470,14 @@ mod tests {
         //      bytes 18  - 127       Groups and Sub Colors
         //      bytes 128 - 131       u32(0)
         //      bytes 132 - end       Global colors
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[..8]);
-        modified_ase_bytes.extend_from_slice(&(5_u32.to_be_bytes()));
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[12..14]);
-        modified_ase_bytes.extend_from_slice(&(24_u32.to_be_bytes()));
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[18..128]);
-        modified_ase_bytes.extend_from_slice(&[0; 4]);
-        modified_ase_bytes.extend_from_slice(&input_ase_bytes[128..]);
-        let res = read_ase(&*modified_ase_bytes);
+        modified_ase_bytes.write_slice(&input_ase_bytes[..8]);
+        modified_ase_bytes.write_u32(5_u32);
+        modified_ase_bytes.write_slice(&input_ase_bytes[12..14]);
+        modified_ase_bytes.write_u32(24_u32);
+        modified_ase_bytes.write_slice(&input_ase_bytes[18..128]);
+        modified_ase_bytes.write_slice(&[0; 4]);
+        modified_ase_bytes.write_slice(&input_ase_bytes[128..]);
+        let res = read_ase(&*modified_ase_bytes.into_vec());
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, (vec![group], vec![block]));

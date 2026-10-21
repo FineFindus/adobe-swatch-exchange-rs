@@ -30,10 +30,7 @@ impl Group {
     ///
     /// # Examples
     /// ```rust
-    /// # use adobe_swatch_exchange::ColorBlock;
-    /// # use adobe_swatch_exchange::ColorValue;
-    /// # use adobe_swatch_exchange::ColorType;
-    /// # use adobe_swatch_exchange::Group;
+    /// # use adobe_swatch_exchange::{ColorBlock, ColorValue, ColorType, Group};
     /// let group = Group::new(
     ///     "Accents".to_owned(),
     ///     vec![ColorBlock::new(

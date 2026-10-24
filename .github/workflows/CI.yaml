@@ -1,6 +1,7 @@
+name: Continuous integration
+
 on: [push, pull_request]
 
-name: Continuous integration
 
 jobs:
   test:
@@ -15,12 +16,9 @@ jobs:
           - 1.87.0  # MSRV
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.rust }}
-      - run: |
-          cargo test
-
+      - run: rustup update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --workspace
 
   semver-checks:
     name: Check Semantic Versioning violations
@@ -36,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: dtolnay/rust-toolchain@nightly
+    - run: rustup update nightly && rustup default nightly
     - name: Install cargo-fuzz
       run: |
         cargo install cargo-fuzz
@@ -53,21 +51,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: stable
-      - run: rustup component add rustfmt
-      - run: |
-          cargo fmt --all --check
+      - run: rustup toolchain install nightly --component rustfmt
+      - run: cargo +nightly fmt --all -- --check
 
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@v1
-        with:
-          toolchain: stable
-      - run: rustup component add clippy
-      - run: |
-          cargo clippy -- -D warnings
+      - run: rustup update stable && rustup default stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings

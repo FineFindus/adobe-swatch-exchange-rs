@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "adobe-swatch-exchange"
-version = "2.0.4"
+version = "2.0.5"
 
 [[package]]
 name = "adobe-swatch-exchange-fuzz"

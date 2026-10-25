@@ -50,8 +50,8 @@ impl Group {
         buf.write_u32(self.calculate_length());
 
         // name length, +1 for null terminator
-        buf.write_u16(self.name.len() as u16 + 1);
-        buf.write_null_terminated_utf_16_str(&self.name);
+        buf.write_u16(self.name.encode_utf16().count() as u16 + 1);
+        buf.write_null_terminated_utf16_str(&self.name);
 
         // write colors
         for block in self.blocks {
@@ -69,7 +69,7 @@ impl Group {
     ///  - color entry type (2)
     ///  - color entry length
     pub(crate) fn calculate_length(&self) -> u32 {
-        2 + self.name.len() as u32 * 2
+        2 + self.name.encode_utf16().count() as u32 * 2
             + 2
             + self
                 .blocks
@@ -95,6 +95,7 @@ impl Group {
                 .ok_or(ASEError::InputDataParseError)?
                 .try_into()?,
         );
+
         // read name bytes, but stop before not byte
         let name_bytes: Vec<u16> = bytes
             .get(2..(name_length as usize * 2))
@@ -384,5 +385,21 @@ mod tests {
         ]);
         assert!(parser_result.is_ok());
         assert_eq!(group, parser_result.unwrap());
+    }
+
+    #[test]
+    fn it_encodes_and_parses_utf8_names() {
+        let group = Group::new(
+            "❤".to_owned(),
+            vec![ColorBlock::new(
+                "😀".to_owned(),
+                ColorValue::Gray(0.5),
+                ColorType::Normal,
+            )],
+        );
+        let mut buf = Buffer::with_capacity(group.calculate_length() as usize);
+        group.clone().write(&mut buf);
+
+        assert_eq!(Group::parse(&buf.into_vec()[6..]).unwrap(), group);
     }
 }

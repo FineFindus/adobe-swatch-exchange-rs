@@ -36,9 +36,10 @@ impl ColorBlock {
     pub(crate) fn write(self, buf: &mut Buffer) {
         buf.write_u16(BlockType::ColorEntry as u16);
         buf.write_u32(self.calculate_length());
+
         // name length, +1 for null terminator
-        buf.write_u16(self.name.len() as u16 + 1);
-        buf.write_null_terminated_utf_16_str(&self.name);
+        buf.write_u16(self.name.encode_utf16().count() as u16 + 1);
+        buf.write_null_terminated_utf16_str(&self.name);
 
         // write color
         buf.write_slice(self.color.get_type());
@@ -54,8 +55,8 @@ impl ColorBlock {
     ///  - color type (4)
     ///  - color value (1/3/4)
     ///  - type (2)
-    pub(crate) const fn calculate_length(&self) -> u32 {
-        2 + self.name.len() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
+    pub(crate) fn calculate_length(&self) -> u32 {
+        2 + self.name.encode_utf16().count() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
     }
 
     /// Parses a [`ColorBlock`] from bytes.
@@ -206,6 +207,20 @@ mod tests {
             "name".to_owned(),
             ColorValue::Rgb(0.5, 0.6, 0.0),
             ColorType::Global,
+        );
+        let mut buf = Buffer::with_capacity(block.calculate_length() as usize);
+        block.clone().write(&mut buf);
+
+        // skip color block header + length
+        assert_eq!(ColorBlock::parse(&buf.into_vec()[6..]).unwrap(), block);
+    }
+
+    #[test]
+    fn it_encodes_and_parses_utf8_name() {
+        let block = ColorBlock::new(
+            "😀".to_owned(),
+            ColorValue::Cmyk(0.5, 0.6, 0.0, 1.0),
+            ColorType::Spot,
         );
         let mut buf = Buffer::with_capacity(block.calculate_length() as usize);
         block.clone().write(&mut buf);

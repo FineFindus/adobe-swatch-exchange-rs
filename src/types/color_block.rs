@@ -199,4 +199,18 @@ mod tests {
             "Only ASEError::ColorTypeError should be returned"
         );
     }
+
+    #[test]
+    fn it_parses_created_block() {
+        let block = ColorBlock::new(
+            "name".to_owned(),
+            ColorValue::Rgb(0.5, 0.6, 0.0),
+            ColorType::Global,
+        );
+        let mut buf = Buffer::with_capacity(block.calculate_length() as usize);
+        block.clone().write(&mut buf);
+
+        // skip color block header + length
+        assert_eq!(ColorBlock::parse(&buf.into_vec()[6..]).unwrap(), block);
+    }
 }

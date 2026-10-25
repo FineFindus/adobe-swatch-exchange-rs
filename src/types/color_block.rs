@@ -87,11 +87,12 @@ impl ColorBlock {
         )?;
 
         let color_type_start = color_value_start + color_value.calculate_length() as usize + 4;
-        let color_type = ColorType::try_from(
+        let color_type = ColorType::try_from(u16::from_be_bytes(
             bytes
-                .get(color_type_start + 1)
-                .ok_or(ASEError::InputDataParseError)?,
-        )?;
+                .get(color_type_start..=(color_type_start + 1))
+                .ok_or(ASEError::InputDataParseError)?
+                .try_into()?,
+        ))?;
 
         Ok(Self::new(name, color_value, color_type))
     }
@@ -191,8 +192,8 @@ mod tests {
 
     #[test]
     fn it_returns_error_on_invalid_color_type() {
-        // `28` is not a valid color type, valid is only 0, 1 and 2
-        let parser_result = ColorBlock::parse(&[0, 1, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 0, 28]);
+        // `1228` is not a valid color type, valid is only 0, 1 and 2
+        let parser_result = ColorBlock::parse(&[0, 1, 0, 0, 71, 114, 97, 121, 63, 0, 0, 0, 12, 28]);
         assert!(
             matches!(parser_result.err(), Some(ASEError::ColorTypeError)),
             "Only ASEError::ColorTypeError should be returned"

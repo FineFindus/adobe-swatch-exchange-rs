@@ -29,10 +29,10 @@ pub enum ColorType {
     Normal = 2,
 }
 
-impl TryFrom<&u8> for ColorType {
+impl TryFrom<u16> for ColorType {
     type Error = ASEError;
 
-    fn try_from(value: &u8) -> Result<Self, Self::Error> {
+    fn try_from(value: u16) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(ColorType::Global),
             1 => Ok(ColorType::Spot),

@@ -1,13 +1,13 @@
 use crate::error::ASEError;
 
-/// Block identifier
+/// Block identifier.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum BlockType {
-    /// Indicates the start of a [`Group`]
+    /// Indicates the start of a [`Group`].
     GroupStart = 0xc001,
-    /// Indicates the end of a [`Group`]
+    /// Indicates the end of a [`Group`].
     GroupEnd = 0xc002,
-    /// Indicates the start of a [`ColorBlock`]
+    /// Indicates the start of a [`ColorBlock`].
     ColorEntry = 0x0001,
 }
 

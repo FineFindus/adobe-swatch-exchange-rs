@@ -2,12 +2,12 @@ use crate::{buffer::Buffer, error::ASEError};
 
 use super::{ColorBlock, block_type::BlockType};
 
-/// Represents a named collection of colors
+/// Represents a named collection of colors.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Group {
-    /// The name of the group
+    /// The name of the group.
     pub name: String,
-    /// The colors in the group
+    /// The colors in the group.
     pub blocks: Vec<ColorBlock>,
 }
 
@@ -44,7 +44,7 @@ impl Group {
         Self { name, blocks }
     }
 
-    /// Write the group to the given [`Buffer`]
+    /// Write the group to the given [`Buffer`].
     pub(crate) fn write(self, buf: &mut Buffer) {
         buf.write_u16(BlockType::GroupStart as u16);
         buf.write_u32(self.calculate_length());
@@ -61,7 +61,7 @@ impl Group {
         buf.write_u16(BlockType::GroupEnd as u16);
     }
 
-    /// Calculate the length of a group.
+    /// Calculate the length of a group in bytes.
     ///
     /// The length is calculate the following way:
     ///  - name length (2)

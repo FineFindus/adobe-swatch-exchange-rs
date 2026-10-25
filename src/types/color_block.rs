@@ -5,11 +5,11 @@ use super::{ColorType, ColorValue, block_type::BlockType};
 /// A single color with an associated name.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColorBlock {
-    /// The name associated with the color
+    /// The name associated with the color.
     pub name: String,
     /// The specific color value of the block.
     pub color: ColorValue,
-    /// The type of color
+    /// The type of color.
     pub color_type: ColorType,
 }
 
@@ -46,7 +46,7 @@ impl ColorBlock {
         buf.write_u16(self.color_type as u16);
     }
 
-    /// Calculate the length of a color block.
+    /// Calculate the length of a color block in bytes.
     ///
     /// The length is calculate the from the following layout:
     ///  - name length (2)

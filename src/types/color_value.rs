@@ -2,7 +2,7 @@ use std::ops::Range;
 
 use crate::{buffer::Buffer, error::ASEError};
 
-/// Color data
+/// Color data.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ColorValue {
     Cmyk(f32, f32, f32, f32),
@@ -12,7 +12,7 @@ pub enum ColorValue {
 }
 
 impl ColorValue {
-    /// Returns the color type identifier
+    /// Returns the color type identifier.
     pub(super) const fn get_type(&self) -> &[u8] {
         match self {
             ColorValue::Cmyk(_, _, _, _) => b"CMYK",
@@ -22,7 +22,7 @@ impl ColorValue {
         }
     }
 
-    /// Write the color values to the given [`Buffer`]
+    /// Write the color values to the given [`Buffer`].
     pub(super) fn write_values(self, buf: &mut Buffer) {
         match self {
             ColorValue::Cmyk(c, m, y, k) => {
@@ -46,7 +46,7 @@ impl ColorValue {
         }
     }
 
-    /// Calculate the length of the color
+    /// Calculate the length of the color value.
     ///
     /// The length is based on the number of f32, times 4,
     /// as each one requires 4 bytes.

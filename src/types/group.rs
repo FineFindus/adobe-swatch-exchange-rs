@@ -6,7 +6,7 @@ use super::{ColorBlock, block_type::BlockType};
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Group {
     /// The name of the group.
-    pub name: String,
+    name: Vec<u16>,
     /// The colors in the group.
     pub blocks: Vec<ColorBlock>,
 }
@@ -39,9 +39,19 @@ impl Group {
     ///         ColorType::Normal,
     ///     )],
     /// );
-    /// # assert_eq!(group.name, "Accents".to_owned());
-    pub const fn new(name: String, blocks: Vec<ColorBlock>) -> Self {
-        Self { name, blocks }
+    /// # assert_eq!(group.name(), "Accents".to_owned());
+    pub fn new(name: String, blocks: Vec<ColorBlock>) -> Self {
+        Self {
+            name: name.encode_utf16().collect(),
+            blocks,
+        }
+    }
+
+    /// The name of the group.
+    #[must_use]
+    pub fn name(&self) -> String {
+        // by construction, `self.name` must be valid UTF16
+        String::from_utf16_lossy(&self.name)
     }
 
     /// Write the group to the given [`Buffer`].
@@ -50,8 +60,9 @@ impl Group {
         buf.write_u32(self.calculate_length());
 
         // name length, +1 for null terminator
-        buf.write_u16(self.name.encode_utf16().count() as u16 + 1);
-        buf.write_null_terminated_utf16_str(&self.name);
+        buf.write_u16(self.name.len() as u16 + 1);
+        buf.write_u16_slice(&self.name);
+        buf.write_u16(0); // null terminator
 
         // write colors
         for block in self.blocks {
@@ -69,7 +80,7 @@ impl Group {
     ///  - color entry type (2)
     ///  - color entry length
     pub(crate) fn calculate_length(&self) -> u32 {
-        2 + self.name.encode_utf16().count() as u32 * 2
+        2 + self.name.len() as u32 * 2
             + 2
             + self
                 .blocks
@@ -103,7 +114,10 @@ impl Group {
             .chunks_exact(2)
             .map(|bytes| u16::from_be_bytes(bytes.try_into().unwrap()))
             .collect();
-        let name = String::from_utf16(&name_bytes)?;
+
+        if char::decode_utf16(name_bytes.iter().copied()).any(|r| r.is_err()) {
+            return Err(ASEError::UTF16Error);
+        }
 
         let mut pointer = name_length as usize * 2 + 2;
         let mut blocks = Vec::new();
@@ -141,7 +155,10 @@ impl Group {
             blocks.push(block);
         }
 
-        Ok(Self::new(name, blocks))
+        Ok(Self {
+            name: name_bytes,
+            blocks,
+        })
     }
 }
 

@@ -308,7 +308,7 @@ mod tests {
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, (vec![group], vec![]));
-        assert_eq!(res.0.first().unwrap().name, "group name".to_owned());
+        assert_eq!(res.0.first().unwrap().name(), "group name".to_owned());
     }
 
     #[test]
@@ -333,7 +333,7 @@ mod tests {
         assert!(res.is_ok());
         let res = res.unwrap();
         assert_eq!(res, (vec![group], vec![block]));
-        assert_eq!(res.0.first().unwrap().name, "group name".to_owned());
+        assert_eq!(res.0.first().unwrap().name(), "group name".to_owned());
         assert_eq!(res.1.first().unwrap().name(), "name".to_owned());
     }
 

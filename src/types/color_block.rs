@@ -6,7 +6,7 @@ use super::{ColorType, ColorValue, block_type::BlockType};
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColorBlock {
     /// The name associated with the color.
-    pub name: String,
+    name: Vec<u16>,
     /// The specific color value of the block.
     pub color: ColorValue,
     /// The type of color.
@@ -23,13 +23,20 @@ impl ColorBlock {
     ///     ColorValue::Rgb(0.20784313725490197, 0.5176470588235295, 0.8941176470588236),
     ///     ColorType::Normal,
     /// );
-    /// # assert_eq!(block.name, "Blue".to_owned());
-    pub const fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
+    /// # assert_eq!(block.name(), "Blue".to_owned());
+    pub fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
         Self {
-            name,
+            name: name.encode_utf16().collect(),
             color,
             color_type,
         }
+    }
+
+    /// The name associated with the color.
+    #[must_use]
+    pub fn name(&self) -> String {
+        // by construction, `self.name` must be valid UTF16
+        String::from_utf16_lossy(&self.name)
     }
 
     /// Write the block to the given [`Buffer`]
@@ -38,8 +45,9 @@ impl ColorBlock {
         buf.write_u32(self.calculate_length());
 
         // name length, +1 for null terminator
-        buf.write_u16(self.name.encode_utf16().count() as u16 + 1);
-        buf.write_null_terminated_utf16_str(&self.name);
+        buf.write_u16(self.name.len() as u16 + 1);
+        buf.write_u16_slice(&self.name);
+        buf.write_u16(0); // null terminator
 
         // write color
         buf.write_slice(self.color.get_type());
@@ -56,7 +64,7 @@ impl ColorBlock {
     ///  - color value (1/3/4)
     ///  - type (2)
     pub(crate) fn calculate_length(&self) -> u32 {
-        2 + self.name.encode_utf16().count() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
+        2 + self.name.len() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
     }
 
     /// Parses a [`ColorBlock`] from bytes.
@@ -78,7 +86,10 @@ impl ColorBlock {
             .chunks_exact(2)
             .map(|bytes| u16::from_be_bytes(bytes.try_into().unwrap()))
             .collect();
-        let name = String::from_utf16(&name_bytes)?;
+
+        if char::decode_utf16(name_bytes.iter().copied()).any(|r| r.is_err()) {
+            return Err(ASEError::UTF16Error);
+        }
 
         let color_value_start = (name_length + 1) * 2;
         let color_value = ColorValue::try_from(
@@ -95,7 +106,11 @@ impl ColorBlock {
                 .try_into()?,
         ))?;
 
-        Ok(Self::new(name, color_value, color_type))
+        Ok(Self {
+            name: name_bytes,
+            color: color_value,
+            color_type,
+        })
     }
 }
 

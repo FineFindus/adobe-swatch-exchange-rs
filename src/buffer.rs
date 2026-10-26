@@ -34,6 +34,13 @@ impl Buffer {
         self.write_slice(&n.to_be_bytes());
     }
 
+    /// Write a slice of [u16] to the buffer.
+    pub fn write_u16_slice(&mut self, data: &[u16]) {
+        for byte in data {
+            self.write_u16(*byte);
+        }
+    }
+
     /// Write a null terminated UTF-16 [String] to [self].
     pub fn write_null_terminated_utf16_str(&mut self, src: &str) {
         src.encode_utf16().for_each(|byte| self.write_u16(byte));

@@ -1,4 +1,4 @@
-use crate::{buffer::Buffer, error::ASEError};
+use crate::{buffer::Buffer, error::ASEError, utf16};
 
 use super::{ColorType, ColorValue, block_type::BlockType};
 
@@ -6,7 +6,7 @@ use super::{ColorType, ColorValue, block_type::BlockType};
 #[derive(Debug, Clone, PartialEq)]
 pub struct ColorBlock {
     /// The name associated with the color.
-    name: Vec<u16>,
+    name_bytes: Vec<u16>,
     /// The specific color value of the block.
     pub color: ColorValue,
     /// The type of color.
@@ -14,7 +14,12 @@ pub struct ColorBlock {
 }
 
 impl ColorBlock {
+    /// Maximum length of the name strings in UTF-16 code units.
+    const MAX_NAME_LEN: usize = u16::MAX as usize - 1;
+
     /// Creates a new `ColorBlock` with the given name, color type and color.
+    ///
+    /// If the name exceeds the maximum string length allowed, it will be truncated.
     ///
     /// ```rust
     /// # use adobe_swatch_exchange::{ColorBlock, ColorValue, ColorType, Group};
@@ -24,9 +29,14 @@ impl ColorBlock {
     ///     ColorType::Normal,
     /// );
     /// # assert_eq!(block.name(), "Blue".to_owned());
+    /// ```
     pub fn new(name: String, color: ColorValue, color_type: ColorType) -> Self {
+        let mut name_bytes: Vec<u16> = name.encode_utf16().collect();
+
+        utf16::truncate_utf16(&mut name_bytes, Self::MAX_NAME_LEN);
+
         Self {
-            name: name.encode_utf16().collect(),
+            name_bytes,
             color,
             color_type,
         }
@@ -36,7 +46,7 @@ impl ColorBlock {
     #[must_use]
     pub fn name(&self) -> String {
         // by construction, `self.name` must be valid UTF16
-        String::from_utf16_lossy(&self.name)
+        String::from_utf16_lossy(&self.name_bytes)
     }
 
     /// Write the block to the given [`Buffer`]
@@ -45,8 +55,8 @@ impl ColorBlock {
         buf.write_u32(self.calculate_length());
 
         // name length, +1 for null terminator
-        buf.write_u16(self.name.len() as u16 + 1);
-        buf.write_u16_slice(&self.name);
+        buf.write_u16(self.name_bytes.len() as u16 + 1);
+        buf.write_u16_slice(&self.name_bytes);
         buf.write_u16(0); // null terminator
 
         // write color
@@ -64,7 +74,7 @@ impl ColorBlock {
     ///  - color value (1/3/4)
     ///  - type (2)
     pub(crate) fn calculate_length(&self) -> u32 {
-        2 + self.name.len() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
+        2 + self.name_bytes.len() as u32 * 2 + 2 + 4 + self.color.calculate_length() + 2
     }
 
     /// Parses a [`ColorBlock`] from bytes.
@@ -107,7 +117,7 @@ impl ColorBlock {
         ))?;
 
         Ok(Self {
-            name: name_bytes,
+            name_bytes,
             color: color_value,
             color_type,
         })
@@ -242,5 +252,27 @@ mod tests {
 
         // skip color block header + length
         assert_eq!(ColorBlock::parse(&buf.into_vec()[6..]).unwrap(), block);
+    }
+
+    #[test]
+    fn it_truncates_too_long_strings() {
+        let block = ColorBlock::new(
+            "a".repeat(u16::MAX as usize + 5),
+            ColorValue::Gray(0.5),
+            ColorType::Normal,
+        );
+
+        let mut buf = Buffer::with_capacity(block.calculate_length() as usize);
+        block.write(&mut buf);
+
+        assert_eq!(
+            // skip color block header + length
+            ColorBlock::parse(&buf.into_vec()[6..]).unwrap(),
+            ColorBlock::new(
+                "a".repeat(u16::MAX as usize - 1),
+                ColorValue::Gray(0.5),
+                ColorType::Normal,
+            )
+        );
     }
 }

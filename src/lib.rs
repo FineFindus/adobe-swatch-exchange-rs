@@ -9,6 +9,7 @@ pub use types::{ColorBlock, ColorType, ColorValue, Group};
 mod buffer;
 mod error;
 mod types;
+mod utf16;
 
 /// Creates an Adobe Swatch Exchange (ASE) file.
 ///

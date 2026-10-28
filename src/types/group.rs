@@ -1,4 +1,4 @@
-use crate::{buffer::Buffer, error::ASEError};
+use crate::{buffer::Buffer, error::ASEError, utf16};
 
 use super::{ColorBlock, block_type::BlockType};
 
@@ -6,7 +6,7 @@ use super::{ColorBlock, block_type::BlockType};
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Group {
     /// The name of the group.
-    name: Vec<u16>,
+    name_bytes: Vec<u16>,
     /// The colors in the group.
     pub blocks: Vec<ColorBlock>,
 }
@@ -26,7 +26,12 @@ pub(crate) enum GroupHold {
 }
 
 impl Group {
+    /// Maximum length of the name strings in UTF-16 code units.
+    const MAX_NAME_LEN: usize = u16::MAX as usize - 1;
+
     /// Creates a new group of colors, grouped together with the specified name.
+    ///
+    /// If the name exceeds the maximum string length allowed, it will be truncated.
     ///
     /// # Examples
     /// ```rust
@@ -41,17 +46,18 @@ impl Group {
     /// );
     /// # assert_eq!(group.name(), "Accents".to_owned());
     pub fn new(name: String, blocks: Vec<ColorBlock>) -> Self {
-        Self {
-            name: name.encode_utf16().collect(),
-            blocks,
-        }
+        let mut name_bytes: Vec<u16> = name.encode_utf16().collect();
+
+        utf16::truncate_utf16(&mut name_bytes, Self::MAX_NAME_LEN);
+
+        Self { name_bytes, blocks }
     }
 
     /// The name of the group.
     #[must_use]
     pub fn name(&self) -> String {
         // by construction, `self.name` must be valid UTF16
-        String::from_utf16_lossy(&self.name)
+        String::from_utf16_lossy(&self.name_bytes)
     }
 
     /// Write the group to the given [`Buffer`].
@@ -60,8 +66,8 @@ impl Group {
         buf.write_u32(self.calculate_length());
 
         // name length, +1 for null terminator
-        buf.write_u16(self.name.len() as u16 + 1);
-        buf.write_u16_slice(&self.name);
+        buf.write_u16(self.name_bytes.len() as u16 + 1);
+        buf.write_u16_slice(&self.name_bytes);
         buf.write_u16(0); // null terminator
 
         // write colors
@@ -80,7 +86,7 @@ impl Group {
     ///  - color entry type (2)
     ///  - color entry length
     pub(crate) fn calculate_length(&self) -> u32 {
-        2 + self.name.len() as u32 * 2
+        2 + self.name_bytes.len() as u32 * 2
             + 2
             + self
                 .blocks
@@ -155,10 +161,7 @@ impl Group {
             blocks.push(block);
         }
 
-        Ok(Self {
-            name: name_bytes,
-            blocks,
-        })
+        Ok(Self { name_bytes, blocks })
     }
 }
 
@@ -418,5 +421,33 @@ mod tests {
         group.clone().write(&mut buf);
 
         assert_eq!(Group::parse(&buf.into_vec()[6..]).unwrap(), group);
+    }
+
+    #[test]
+    fn it_truncates_too_long_strings() {
+        let group = Group::new(
+            "a".repeat(u16::MAX as usize + 12),
+            vec![ColorBlock::new(
+                "test".to_owned(),
+                ColorValue::Gray(0.5),
+                ColorType::Normal,
+            )],
+        );
+
+        let mut buf = Buffer::with_capacity(group.calculate_length() as usize);
+        group.write(&mut buf);
+
+        assert_eq!(
+            // skip color block header + length
+            Group::parse(&buf.into_vec()[6..]).unwrap(),
+            Group::new(
+                "a".repeat(u16::MAX as usize - 1),
+                vec![ColorBlock::new(
+                    "test".to_owned(),
+                    ColorValue::Gray(0.5),
+                    ColorType::Normal,
+                )],
+            )
+        );
     }
 }

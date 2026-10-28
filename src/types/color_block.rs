@@ -21,6 +21,8 @@ impl ColorBlock {
     ///
     /// If the name exceeds the maximum string length allowed, it will be truncated.
     ///
+    /// # Examples
+    ///
     /// ```rust
     /// # use adobe_swatch_exchange::{ColorBlock, ColorValue, ColorType, Group};
     /// let block = ColorBlock::new(
@@ -43,6 +45,18 @@ impl ColorBlock {
     }
 
     /// The name associated with the color.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # use adobe_swatch_exchange::{ColorBlock, ColorValue, ColorType, Group};
+    /// let block = ColorBlock::new(
+    ///     "Blue".to_owned(),
+    ///     ColorValue::Rgb(0.20784313725490197, 0.5176470588235295, 0.8941176470588236),
+    ///     ColorType::Normal,
+    /// );
+    /// assert_eq!(block.name(), "Blue".to_owned());
+    /// ```
     #[must_use]
     pub fn name(&self) -> String {
         // by construction, `self.name` must be valid UTF16

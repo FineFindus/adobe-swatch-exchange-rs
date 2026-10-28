@@ -14,6 +14,7 @@ mod utf16;
 /// Creates an Adobe Swatch Exchange (ASE) file.
 ///
 /// # Examples
+///
 /// ```rust
 /// # use adobe_swatch_exchange::{ColorBlock, ColorValue, ColorType, create_ase};
 /// let color = ColorBlock::new("name".to_owned(), ColorValue::Gray(0.5), ColorType::Normal);
@@ -53,6 +54,7 @@ pub fn create_ase(groups: Vec<Group>, colors: Vec<ColorBlock>) -> Vec<u8> {
 /// or the ASE file is invalid.
 ///
 /// # Examples
+///
 /// ```rust
 /// # use adobe_swatch_exchange::read_ase;
 /// // any source

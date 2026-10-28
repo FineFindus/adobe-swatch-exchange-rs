@@ -1,6 +1,6 @@
 [package]
 name = "adobe-swatch-exchange"
-version = "2.0.5"
+version = "3.0.0"
 edition = "2024"
 rust-version = "1.87"
 readme = "README.md"
